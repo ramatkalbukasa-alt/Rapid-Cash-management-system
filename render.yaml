@@ -6,7 +6,7 @@ services:
     plan: free
     buildCommand: bash build.sh
     startCommand: gunicorn quick_transfert.wsgi --workers 1
-    releaseCommand: python manage.py migrate
+    releaseCommand: python manage.py migrate && python manage.py collectstatic --noinput
     healthCheckPath: /
     envVars:
       - key: DEBUG
