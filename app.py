@@ -11,15 +11,15 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'quick_transfert.settings')
 if os.environ.get('RENDER'):
     print("--- 🚀 DÉMARRAGE DE L'AUTO-RÉPARATION RENDER ---")
     try:
-        # Lancement de init_db.py
-        print("🛠️ Exécution de init_db.py...")
-        subprocess.run([sys.executable, "init_db.py"], check=True)
-        
-        # Lancement des migrations
+        # 1. Lancement des migrations (CRÉATION DES TABLES)
         print("📂 Application des migrations...")
         subprocess.run([sys.executable, "manage.py", "migrate", "--noinput", "--fake-initial"], check=True)
+
+        # 2. Initialisation et Réparation (APRÈS MIGRATION)
+        print("🛠️ Initialisation des données système...")
+        subprocess.run([sys.executable, "init_db.py"], check=True)
         
-        # Création du superuser
+        # 3. Création du superuser
         print("👤 Initialisation de l'administrateur...")
         subprocess.run([sys.executable, "create_admin.py"], check=True)
         
