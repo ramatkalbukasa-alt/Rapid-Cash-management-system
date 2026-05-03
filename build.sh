@@ -11,7 +11,7 @@ ls -la staticfiles
 echo "Content of static/css directory:"
 ls -la static/css
 
-python manage.py migrate
+# Note: Migrations are now handled in start.sh
 
 # Create superuser if DB is empty (optional)
 # python manage.py shell < create_admin.py
