@@ -19,6 +19,10 @@ if os.environ.get('RENDER'):
         print("📂 Application des migrations...")
         subprocess.run([sys.executable, "manage.py", "migrate", "--noinput", "--fake-initial"], check=True)
         
+        # Création du superuser
+        print("👤 Initialisation de l'administrateur...")
+        subprocess.run([sys.executable, "create_admin.py"], check=True)
+        
         # Collectstatic
         print("📦 Collecte des assets...")
         subprocess.run([sys.executable, "manage.py", "collectstatic", "--noinput"], check=True)
