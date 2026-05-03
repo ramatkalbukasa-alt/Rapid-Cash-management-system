@@ -28,7 +28,11 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-change-this-in
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default='False', cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,*.onrender.com').split(',')
+ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.onrender.com').split(',')]
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
