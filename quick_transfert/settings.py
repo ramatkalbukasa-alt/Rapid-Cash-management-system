@@ -90,13 +90,22 @@ WSGI_APPLICATION = "quick_transfert.wsgi.application"  # RAPID CASH
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Use PostgreSQL in production via DATABASE_URL, fallback to SQLite for dev
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# Use PostgreSQL in production via DATABASE_URL, fallback to SQLite for dev
+if os.environ.get('RENDER'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+    # If DATABASE_URL is missing on Render, dj_database_url.config() will return an empty dict
+    # which will cause Django to fail early with a clear error.
+else:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        )
+    }
 
 
 # Password validation
