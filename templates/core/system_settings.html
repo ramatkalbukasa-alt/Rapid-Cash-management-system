@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paramètres Système - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4 border-b">
+    <h1 class="font-heading">Paramètres Système</h1>
+    <p class="text-muted">Configurez les paramètres globaux de la plateforme RAPID CASH</p>
+</div>
+
+<!-- Success Message -->
+{% if messages %}
+<div class="mt-4">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}" style="padding: 1rem; border-radius: 6px; margin-bottom: 1rem; background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; color: #16a34a;">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Settings Form -->
+<form method="post" class="mt-6">
+    {% csrf_token %}
+    
+    <!-- Company Information Section -->
+    <div class="card mb-6">
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 class="font-heading" style="color: var(--primary); margin-top: 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 0.5rem;">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                Informations Entreprise
+            </h2>
+            <p class="text-muted" style="margin-top: 0.5rem;">Détails généraux de votre plateforme</p>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label">{{ form.company_name.label }}</label>
+            {% if form.company_name.errors %}
+                {{ form.company_name }}
+                <span class="error-text">{{ form.company_name.errors.0 }}</span>
+            {% else %}
+                {{ form.company_name }}
+            {% endif %}
+            <small class="text-muted" style="display: block; margin-top: 0.5rem;">Nom de votre entreprise (ex: RAPID CASH)</small>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label">{{ form.phone_number.label }}</label>
+                {% if form.phone_number.errors %}
+                    {{ form.phone_number }}
+                    <span class="error-text">{{ form.phone_number.errors.0 }}</span>
+                {% else %}
+                    {{ form.phone_number }}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ form.email_address.label }}</label>
+                {% if form.email_address.errors %}
+                    {{ form.email_address }}
+                    <span class="error-text">{{ form.email_address.errors.0 }}</span>
+                {% else %}
+                    {{ form.email_address }}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label class="form-label">{{ form.physical_address.label }}</label>
+            {% if form.physical_address.errors %}
+                {{ form.physical_address }}
+                <span class="error-text">{{ form.physical_address.errors.0 }}</span>
+            {% else %}
+                {{ form.physical_address }}
+            {% endif %}
+            <small class="text-muted" style="display: block; margin-top: 0.5rem;">Adresse physique complète</small>
+        </div>
+    </div>
+
+    <!-- Financial Configuration -->
+    <div class="card mb-6">
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 class="font-heading" style="color: var(--primary); margin-top: 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 0.5rem;">
+                    <path d="M12 2v20m10-10H2"/>
+                </svg>
+                Configuration Financière
+            </h2>
+            <p class="text-muted" style="margin-top: 0.5rem;">Paramètres de calcul et de commissions</p>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label">{{ form.default_commission_percentage.label }}</label>
+                {% if form.default_commission_percentage.errors %}
+                    {{ form.default_commission_percentage }}
+                    <span class="error-text">{{ form.default_commission_percentage.errors.0 }}</span>
+                {% else %}
+                    {{ form.default_commission_percentage }}
+                {% endif %}
+                <small class="text-muted" style="display: block; margin-top: 0.5rem;">En pourcentage (ex: 5.5)</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ form.auto_reconcile_threshold.label }}</label>
+                {% if form.auto_reconcile_threshold.errors %}
+                    {{ form.auto_reconcile_threshold }}
+                    <span class="error-text">{{ form.auto_reconcile_threshold.errors.0 }}</span>
+                {% else %}
+                    {{ form.auto_reconcile_threshold }}
+                {% endif %}
+                <small class="text-muted" style="display: block; margin-top: 0.5rem;">En USD (limite d'écart)</small>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label class="form-label">{{ form.transaction_number_prefix.label }}</label>
+            {% if form.transaction_number_prefix.errors %}
+                {{ form.transaction_number_prefix }}
+                <span class="error-text">{{ form.transaction_number_prefix.errors.0 }}</span>
+            {% else %}
+                {{ form.transaction_number_prefix }}
+            {% endif %}
+            <small class="text-muted" style="display: block; margin-top: 0.5rem;">Préfixe pour les numéros de transaction (ex: RC-)</small>
+        </div>
+    </div>
+
+    <!-- Feature Toggles -->
+    <div class="card mb-6">
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 class="font-heading" style="color: var(--primary); margin-top: 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 0.5rem;">
+                    <circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24"/><path d="M1 12h6m6 0h6"/><path d="M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24"/><path d="M19.78 19.78l-4.24-4.24m-3.08-3.08l-4.24-4.24"/>
+                </svg>
+                Fonctionnalités
+            </h2>
+            <p class="text-muted" style="margin-top: 0.5rem;">Activez ou désactivez les fonctionnalités de la plateforme</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="form-check" style="display: flex; align-items: center;">
+                {{ form.enable_email_notifications }}
+                <label class="form-label" style="margin-left: 0.75rem; margin-bottom: 0;">
+                    {{ form.enable_email_notifications.label }}
+                </label>
+            </div>
+
+            <div class="form-check" style="display: flex; align-items: center;">
+                {{ form.enable_sms_notifications }}
+                <label class="form-label" style="margin-left: 0.75rem; margin-bottom: 0;">
+                    {{ form.enable_sms_notifications.label }}
+                </label>
+            </div>
+
+            <div class="form-check" style="display: flex; align-items: center;">
+                {{ form.enable_api }}
+                <label class="form-label" style="margin-left: 0.75rem; margin-bottom: 0;">
+                    {{ form.enable_api.label }}
+                </label>
+            </div>
+
+            <div class="form-check" style="display: flex; align-items: center;">
+                {{ form.is_maintenance_mode }}
+                <label class="form-label" style="margin-left: 0.75rem; margin-bottom: 0;">
+                    {{ form.is_maintenance_mode.label }}
+                </label>
+            </div>
+
+            <div class="form-check" style="display: flex; align-items: center;">
+                {{ form.enable_two_factor_auth }}
+                <label class="form-label" style="margin-left: 0.75rem; margin-bottom: 0;">
+                    {{ form.enable_two_factor_auth.label }}
+                </label>
+            </div>
+
+            <div class="form-check" style="display: flex; align-items: center;">
+                {{ form.auto_reconcile_enabled }}
+                <label class="form-label" style="margin-left: 0.75rem; margin-bottom: 0;">
+                    {{ form.auto_reconcile_enabled.label }}
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Settings -->
+    <div class="card mb-6">
+        <div style="border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h2 class="font-heading" style="color: var(--primary); margin-top: 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 0.5rem;">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                </svg>
+                Paramètres d'Audit
+            </h2>
+            <p class="text-muted" style="margin-top: 0.5rem;">Configurez la conservation des journaux d'audit</p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.audit_log_retention_days.label }}</label>
+            {% if form.audit_log_retention_days.errors %}
+                {{ form.audit_log_retention_days }}
+                <span class="error-text">{{ form.audit_log_retention_days.errors.0 }}</span>
+            {% else %}
+                {{ form.audit_log_retention_days }}
+            {% endif %}
+            <small class="text-muted" style="display: block; margin-top: 0.5rem;">Nombre de jours avant suppression des anciens journaux (0 = conservation infinie)</small>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 0.5rem;">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Enregistrer les Modifications
+        </button>
+        <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline" style="flex: 1; text-align: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; margin-right: 0.5rem;">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Annuler
+        </a>
+    </div>
+</form>
+
+<style>
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(247, 147, 26, 0.05);
+    box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.error-text {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.alert {
+    border-radius: 6px;
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 4px solid #22c55e;
+    color: #16a34a;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #e67e22;
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    border: 2px solid var(--border);
+    color: var(--text);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+</style>
+{% endblock %}

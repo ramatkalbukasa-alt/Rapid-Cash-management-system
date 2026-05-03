@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 class="text-2xl font-bold">{{ title }}</h1>
+        <p class="text-muted">Aperçu financier complet de votre activité</p>
+    </div>
+    
+    <div>
+        <a href="?format=pdf" class="btn btn-primary" target="_blank">Télécharger en PDF</a>
+        {% if user.role == 'ADMINISTRATEUR' %}
+        <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline" style="margin-left: 0.5rem;">Retour au Dashboard</a>
+        {% else %}
+        <a href="{% url 'core:agent_dashboard' %}" class="btn btn-outline" style="margin-left: 0.5rem;">Retour au Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid mt-4" style="{% if user_role == 'ADMINISTRATEUR' %}grid-template-columns: 1fr 1fr 1fr;{% else %}grid-template-columns: 1fr 1fr;{% endif %} gap: 1.5rem;">
+    <div class="card text-center" style="border-left: 4px solid var(--primary);">
+        <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Volume Traité Global</h3>
+        <p style="font-size: 2rem; font-weight: 700;">{{ volume|floatformat:2 }} $</p>
+    </div>
+    
+    <div class="card text-center" style="border-left: 4px solid var(--success);">
+        <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Frais Collectés (Brut)</h3>
+        <p style="font-size: 2rem; font-weight: 700;">{{ frais|floatformat:2 }} $</p>
+    </div>
+
+    {% if user_role == 'ADMINISTRATEUR' %}
+    <div class="card text-center" style="border-left: 4px solid var(--danger);">
+        <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Dépenses Admin</h3>
+        <p style="font-size: 2rem; font-weight: 700;">{{ depenses|floatformat:2 }} $</p>
+    </div>
+    {% endif %}
+</div>
+
+{% if user_role == 'ADMINISTRATEUR' %}
+<div class="grid mt-4" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div class="card text-center" style="border-left: 4px solid #f59e0b;">
+        <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Commissions Agents (Estimées)</h3>
+        <p style="font-size: 2rem; font-weight: 700;">{{ commissions|floatformat:2 }} $</p>
+    </div>
+
+    <div class="card text-center" style="border-left: 4px solid #10b981; background-color: #f0fdf4;">
+        <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase; color: #047857;">Bénéfice Net</h3>
+        <p style="font-size: 2rem; font-weight: 700; color: #047857;">{{ benefice|floatformat:2 }} $</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Transactions dans cette période</h3>
+        {% if truncated %}
+        <span style="font-size: 0.8rem; color: var(--danger); font-family: 'JetBrains Mono', monospace; background: rgba(239,68,68,0.1); padding: 0.25rem 0.75rem; border-radius: 4px; border: 1px solid rgba(239,68,68,0.3);">
+            ⚠ Affichage limité à 100 / {{ total_count }} transactions. Exportez en PDF ou CSV pour le rapport complet.
+        </span>
+        {% endif %}
+    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                <th style="padding: 0.75rem;">Date</th>
+                <th style="padding: 0.75rem;">Agent</th>
+                <th style="padding: 0.75rem;">Opération</th>
+                <th style="padding: 0.75rem;">Montant (Réf. USD)</th>
+                <th style="padding: 0.75rem;">Frais (Réf. USD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem;">{{ tx.date|date:"d/m/Y H:i" }}</td>
+                <td style="padding: 0.75rem;">{{ tx.agent.username }}</td>
+                <td style="padding: 0.75rem;">{{ tx.get_type_operation_display }}</td>
+                <td style="padding: 0.75rem;">{{ tx.montant_reference|floatformat:2 }} $</td>
+                <td style="padding: 0.75rem; color: var(--success); font-weight: 600;">+{{ tx.frais_reference|floatformat:2 }} $</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted" style="padding: 1rem;">Aucune transaction pour cette période.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

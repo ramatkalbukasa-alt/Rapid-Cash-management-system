@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
+            color: #0b1437;
+            background: #f8fafc;
+            font-size: 13px;
+            margin: 0;
+        }
+        h1, h2, h3, h4 {
+            color: #0b1437;
+            margin-bottom: 0.2em;
+        }
+        h1 {
+            font-size: 2.1em;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #0b1437;
+            padding-bottom: 0.5em;
+            margin-bottom: 1.2em;
+        }
+        .header-logo {
+            font-size: 1.7em;
+            font-weight: 700;
+            color: #0b1437;
+            letter-spacing: 0.06em;
+        }
+        .header-meta {
+            text-align: right;
+            font-size: 0.95em;
+        }
+        .info-box {
+            background: #e6ecf5;
+            border-left: 5px solid #0b1437;
+            padding: 0.7em 1.2em;
+            margin-bottom: 1.2em;
+            border-radius: 4px;
+        }
+        .kpi-row {
+            display: flex;
+            gap: 1em;
+            margin-bottom: 1.2em;
+            page-break-inside: avoid;
+        }
+        .kpi-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 7px;
+            box-shadow: 0 1px 4px #e6e6e6;
+            border-top: 5px solid #64748b;
+            padding: 1em 1.2em 0.7em 1.2em;
+            min-width: 0;
+        }
+        .kpi-card.blue { border-top-color: #2563eb; }
+        .kpi-card.red { border-top-color: #e11d48; }
+        .kpi-card.green { border-top-color: #059669; }
+        .kpi-label {
+            font-size: 0.98em;
+            color: #64748b;
+            margin-bottom: 0.2em;
+        }
+        .kpi-value {
+            font-size: 1.35em;
+            font-weight: 700;
+            color: #0b1437;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.2em;
+            page-break-inside: avoid;
+        }
+        .summary-table th, .summary-table td {
+            border: 1px solid #cbd5e1;
+            padding: 0.5em 0.7em;
+            text-align: left;
+        }
+        .summary-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.2em;
+        }
+        .transaction-table th, .transaction-table td {
+            border: 1px solid #e2e8f0;
+            padding: 0.45em 0.6em;
+            font-size: 0.97em;
+        }
+        .transaction-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+        }
+        .transaction-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.18em 0.7em;
+            border-radius: 12px;
+            font-size: 0.93em;
+            font-weight: 600;
+            color: #fff;
+            margin-right: 0.2em;
+        }
+        .badge.transfert { background: #2563eb; }
+        .badge.retrait { background: #e11d48; }
+        .badge.completed { background: #059669; }
+        .badge.cancelled { background: #e11d48; }
+        .badge.pending { background: #f59e42; }
+        .footer {
+            border-top: 2px solid #0b1437;
+            margin-top: 2em;
+            padding-top: 0.7em;
+            font-size: 0.95em;
+            color: #64748b;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        .confidential {
+            color: #e11d48;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-logo">QUICK TRANSFERT</div>
+        <div class="header-meta">
+            <div><strong>Rapport:</strong> {{ report_type_label }}</div>
+            <div><strong>Période:</strong> {{ period_label }}</div>
+            <div><strong>Date de génération:</strong> {{ generation_date }}</div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>Profil:</strong> {{ user_profile }}<br>
+        <strong>Type de rapport:</strong> {{ report_type_label }}<br>
+        <strong>Période:</strong> {{ period_label }}
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-label">Volume total</div>
+            <div class="kpi-value">{{ kpi_volume_total }}</div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="kpi-label">Frais générés</div>
+            <div class="kpi-value">{{ kpi_frais }}</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-label">Dépenses / Commissions</div>
+            <div class="kpi-value">{{ kpi_depenses_commissions }}</div>
+        </div>
+        <div class="kpi-card green">
+            <div class="kpi-label">Bénéfice net</div>
+            <div class="kpi-value">{{ kpi_benefice_net }}</div>
+        </div>
+    </div>
+
+    {% if user_role == 'ADMINISTRATEUR' %}
+    <!-- Financial Summary Table (Admin only) -->
+    <h2>Résumé Financier</h2>
+    <table class="summary-table">
+        <tr>
+            <th>Frais brut</th>
+            <th>Dépenses</th>
+            <th>Commissions</th>
+            <th>Bénéfice net</th>
+        </tr>
+        <tr>
+            <td>{{ resume_frais_brut }}</td>
+            <td>{{ resume_depenses }}</td>
+            <td>{{ resume_commissions }}</td>
+            <td>{{ resume_benefice_net }}</td>
+        </tr>
+    </table>
+    {% endif %}
+
+    <!-- Transaction Table -->
+    <h2>Détail des Transactions</h2>
+    <table class="transaction-table">
+        <tr>
+            <th>Date</th>
+            <th>N° Transaction</th>
+            <th>Agent</th>
+            <th>Type</th>
+            <th>Montant</th>
+            <th>Frais</th>
+            <th>Statut</th>
+        </tr>
+        {% for tx in transactions %}
+        <tr>
+            <td>{{ tx.date|date:"d/m/Y H:i" }}</td>
+            <td>{{ tx.numero_transaction }}</td>
+            <td>{{ tx.agent.get_full_name|default:tx.agent.username }}</td>
+            <td>
+                {% if tx.type_operation == 'TRANSFERT' %}
+                    <span class="badge transfert">Transfert</span>
+                {% elif tx.type_operation == 'RETRAIT' %}
+                    <span class="badge retrait">Retrait</span>
+                {% else %}
+                    <span class="badge">{{ tx.type_operation }}</span>
+                {% endif %}
+            </td>
+            <td>{{ tx.montant_reference|floatformat:2 }}</td>
+            <td>{{ tx.frais_calcules }}</td>
+            <td>
+                {% if tx.statut == 'COMPLETED' %}
+                    <span class="badge completed">Terminé</span>
+                {% elif tx.statut == 'ANNULÉ' %}
+                    <span class="badge cancelled">Annulé</span>
+                {% else %}
+                    <span class="badge">{{ tx.statut }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="footer">
+        <div>© {{ company_name }} | <span class="confidential">Confidentiel</span> — Ce rapport est strictement réservé à l'usage interne.</div>
+    </div>
+</body>
+</html>

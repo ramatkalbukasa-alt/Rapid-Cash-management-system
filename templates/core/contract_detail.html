@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Détails du Contrat{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>📋 Détails du Contrat</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if request.user.role == 'ASSOCIE' or request.user.role == 'INVESTISSEUR' %}
+            <a href="{% url 'core:partner_balance' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            {% else %}
+            <a href="{% url 'core:admin_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Contract Details Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Informations du Contrat</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Type</label>
+                            <h6>
+                                {% if contract.type == 'ASSOCIE' %}
+                                    <span class="badge bg-info">Associé</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Investisseur</span>
+                                {% endif %}
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Partenaire</label>
+                            <h6>{{ contract.partenaire.get_full_name }}</h6>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Date Début</label>
+                            <h6>{{ contract.date_debut|date:"d/m/Y" }}</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Statut</label>
+                            <h6>
+                                {% if contract.statut == 'ACTIF' %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% elif contract.statut == 'TERMINE' %}
+                                    <span class="badge bg-secondary">Terminé</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Annulé</span>
+                                {% endif %}
+                            </h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <small class="text-muted">Montant Engagé</small>
+                            <h4 class="text-success fw-bold">${{ contract.montant_engage|floatformat:2 }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <small class="text-muted">Montant Payé</small>
+                            <h4 class="text-warning fw-bold">${{ contract.montant_paye|floatformat:2 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <label class="text-muted mb-2">Progrès de Paiement</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ percentage_paid }}%;" 
+                             aria-valuenow="{{ percentage_paid }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ percentage_paid|floatformat:1 }}%
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Solde Restant: <strong>${{ remaining_balance|floatformat:2 }}</strong>
+                    </small>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Historique des Paiements</h5>
+                </div>
+                <div class="card-body">
+                    {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Montant</th>
+                                    <th>Référence</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.date|date:"d/m/Y H:i" }}</td>
+                                    <td class="fw-bold text-success">${{ payment.montant|floatformat:2 }}</td>
+                                    <td><code>{{ payment.reference }}</code></td>
+                                    <td>{{ payment.notes|truncatewords:10 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0" role="alert">
+                        <i class="fas fa-info-circle"></i> Aucun paiement enregistré pour ce contrat.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">💰 Résumé Financier</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted">Montant Engagé</label>
+                        <h5 class="text-success">${{ contract.montant_engage|floatformat:2 }}</h5>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted">Retour Attendu</label>
+                        <h5>${{ contract.retour_attendu|floatformat:2 }}</h5>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="text-muted">Montant Payé</label>
+                        <h5 class="text-warning">${{ contract.montant_paye|floatformat:2 }}</h5>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted">Solde Restant</label>
+                        <h5 class="text-danger">${{ remaining_balance|floatformat:2 }}</h5>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-muted d-block">Complété à</small>
+                        <h4 class="text-primary">{{ percentage_paid|floatformat:1 }}%</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

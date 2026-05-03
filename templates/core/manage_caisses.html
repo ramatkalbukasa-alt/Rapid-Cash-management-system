@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Gérer les Caisses - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 class="font-heading">Gestion des Caisses Agents</h1>
+        <p class="text-muted">Allouez des fonds et ajustez les soldes théoriques</p>
+    </div>
+    <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline">Retour au Dashboard</a>
+</div>
+
+<div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+    <div class="card">
+        <h3 class="font-heading">Allouer des Fonds</h3>
+        <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.875rem;">Définissez ou ajustez le montant alloué à la caisse d'un agent.</p>
+        <form method="POST" class="mt-4">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">Valider l'opération</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>État Actuel des Caisses</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                    <th style="padding: 0.75rem;">Agent</th>
+                    <th style="padding: 0.75rem;">Solde Actuel</th>
+                    <th style="padding: 0.75rem;">Devise</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in caisses %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem; font-weight: 600;" class="font-heading">{{ c.agent.get_full_name|default:c.agent.username }}</td>
+                    <td style="padding: 0.75rem; color: var(--success); font-weight: 700;" class="font-mono">{{ c.solde }}</td>
+                    <td style="padding: 0.75rem;" class="font-mono text-muted">{{ c.devise.code }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted" style="padding: 2rem;">Aucune caisse configurée.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord Admin - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4 border-b">
+    <h1 class="font-heading">Tableau de Bord - Administrateur</h1>
+    <p class="text-muted">Vue globale des opérations et indicateurs (Bénéfices = Frais collectés - Dépenses - Commissions)</p>
+</div>
+
+<div class="grid grid-cols-3 mt-4">
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.875rem; text-transform: uppercase;">Volume Global Traité</h3>
+        <p class="font-mono text-gradient" style="font-size: 2rem; font-weight: 700;">{{ volume_global|floatformat:2 }} $</p>
+    </div>
+    
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.875rem; text-transform: uppercase;">Frais Collectés</h3>
+        <p class="font-mono text-gradient" style="font-size: 2rem; font-weight: 700;">{{ frais_collectes|floatformat:2 }} $</p>
+    </div>
+
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.875rem; text-transform: uppercase;">Dépenses Admin</h3>
+        <p class="font-mono text-gradient" style="font-size: 2rem; font-weight: 700;">{{ depenses_total|floatformat:2 }} $</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-4 mt-4 gap-4">
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.75rem; text-transform: uppercase;">Volume Aujourd'hui</h3>
+        <p class="font-mono text-gradient" style="font-size: 1.75rem; font-weight: 700;">{{ transactions_today|floatformat:2 }} $</p>
+    </div>
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.75rem; text-transform: uppercase;">Volume Ce Mois</h3>
+        <p class="font-mono text-gradient" style="font-size: 1.75rem; font-weight: 700;">{{ transactions_month|floatformat:2 }} $</p>
+    </div>
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.75rem; text-transform: uppercase;">Transaction Moyenne</h3>
+        <p class="font-mono text-gradient" style="font-size: 1.75rem; font-weight: 700;">{{ average_transaction|floatformat:2 }} $</p>
+    </div>
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.75rem; text-transform: uppercase;">Sessions Ouvertes</h3>
+        <p class="font-mono text-gradient" style="font-size: 1.75rem; font-weight: 700;">{{ open_sessions_count }}</p>
+    </div>
+</div>
+
+<div class="grid mt-4" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div class="card text-center">
+        <h3 class="text-muted font-heading" style="font-size: 0.875rem; text-transform: uppercase;">Commissions Agents</h3>
+        <p class="font-mono text-gradient" style="font-size: 2rem; font-weight: 700;">{{ commissions_total|floatformat:2 }} $</p>
+    </div>
+
+    <div class="card text-center">
+        <h3 class="font-heading" style="font-size: 0.875rem; text-transform: uppercase; color: var(--primary);">Bénéfice Net</h3>
+        <p class="font-mono text-gradient" style="font-size: 2.5rem; font-weight: 700;">{{ benefice_net|floatformat:2 }} $</p>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <h3 class="font-heading">Volume des Transactions (7 derniers jours)</h3>
+    <div style="height: 300px; width: 100%;">
+        <canvas id="volumeChart"></canvas>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <h3 class="font-heading">Dernières Transactions Globales</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                <th style="padding: 0.75rem;">Date</th>
+                <th style="padding: 0.75rem;">Agent</th>
+                <th style="padding: 0.75rem;">Type</th>
+                <th style="padding: 0.75rem;">Montant</th>
+                <th style="padding: 0.75rem;">Frais</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in recent_transactions %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem;" class="font-mono text-muted">{{ tx.date|date:"d/m/Y H:i" }}</td>
+                <td style="padding: 0.75rem;" class="font-heading">{{ tx.agent.username }}</td>
+                <td style="padding: 0.75rem;">
+                    <span class="font-mono" style="font-size: 0.75rem; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">{{ tx.get_type_operation_display }}</span>
+                </td>
+                <td style="padding: 0.75rem;" class="font-mono">{{ tx.montant }} {{ tx.devise_origine.code }}</td>
+                <td style="padding: 0.75rem;" class="font-mono text-gradient">{{ tx.frais_calcules }} $</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted" style="padding: 1rem;">Aucune transaction.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="pb-4 mt-8 border-b">
+    <h1 class="font-heading">Espace Opérations - Administrateur</h1>
+    <p class="text-muted">Gérez vos propres transactions et votre caisse</p>
+    {% if caisse %}
+    <p class="text-muted" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">Caisse disponible : 
+        <strong class="font-mono text-gradient" style="font-size: 1.5rem;">{{ caisse.solde }} {{ caisse.devise.code }}</strong>
+    </p>
+    {% endif %}
+</div>
+
+{% if session_ouverte %}
+<div class="card stat-card mt-4 mb-4">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 class="font-heading" style="color: var(--primary); margin: 0;">Ma Session de Caisse Ouverte</h3>
+            <p style="color: var(--text); margin: 5px 0 0;">Solde initial: <span class="font-mono">{{ session_ouverte.solde_initial }} {{ caisse.devise.code }}</span> | <strong class="font-mono" style="font-size: 1.1em; color: var(--primary);">Solde théorique actuel: {{ caisse.solde }} {{ caisse.devise.code }}</strong></p>
+        </div>
+        <a href="{% url 'core:close_session' %}" class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);">Clôturer ma Caisse</a>
+    </div>
+</div>
+{% else %}
+<div class="card mt-4 mb-4" style="text-align: center; padding: 2.5rem; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
+    <h3 class="font-heading" style="color: var(--danger); margin-bottom: 1rem;">Votre caisse personnelle est fermée</h3>
+    <p class="text-muted" style="margin-bottom: 1.5rem;">Vous devez ouvrir une session pour commencer à traiter des opérations en tant qu'administrateur.</p>
+    <form method="POST" action="{% url 'core:open_session' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Ouvrir ma Caisse</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+    <div class="card">
+        <h3 class="font-heading">Nouvelle Transaction (Admin)</h3>
+        
+        {% if session_ouverte %}
+        <form method="POST" action="{% url 'core:process_transaction' %}" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Type d'opération</label>
+                <select class="form-control" name="type" required>
+                    <option value="TRANSFERT">Transfert</option>
+                    <option value="RETRAIT">Retrait</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Montant</label>
+                <input type="number" step="0.01" class="form-control" name="montant" placeholder="Ex: 150.00" required
+                       hx-get="{% url 'core:calculate_fee' %}" hx-trigger="keyup changed delay:500ms" hx-target="#fee-display-admin" hx-include="[name='zone']">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Devise</label>
+                <select class="form-control" name="devise" required>
+                    {% for d in devises %}
+                    <option value="{{ d.id }}">{{ d.code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Zone</label>
+                <select class="form-control" name="zone" required 
+                        hx-get="{% url 'core:calculate_fee' %}" hx-trigger="change" hx-target="#fee-display-admin" hx-include="[name='montant']">
+                    {% for z in zones %}
+                    <option value="{{ z.id }}">{{ z.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="card mt-4 mb-4" style="background-color: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px;">
+                <p class="text-muted" style="font-size: 0.875rem;">Frais calculés automatiquement</p>
+                <h2 id="fee-display-admin" class="font-mono text-gradient" style="margin: 0;">0,00 $</h2>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Valider l'opération</button>
+        </form>
+        {% else %}
+        <div style="padding: 2.5rem; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.2); margin-top: 1rem; border-radius: 12px; border: 1px dashed var(--border);">
+            <p style="font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: var(--text);">Session Requise</p>
+            <p style="font-size: 0.875rem; max-width: 300px; margin: 0.5rem auto 0;">Ouvrez votre caisse pour effectuer des opérations.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h3>Mes Dernières Opérations</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                    <th style="padding: 0.75rem;">N°</th>
+                    <th style="padding: 0.75rem;">Type</th>
+                    <th style="padding: 0.75rem;">Montant</th>
+                    <th style="padding: 0.75rem;">Status</th>
+                    <th style="padding: 0.75rem;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in my_recent_transactions %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;" class="font-mono">{{ tx.numero_transaction }}</td>
+                    <td style="padding: 0.75rem;">{{ tx.get_type_operation_display }}</td>
+                    <td style="padding: 0.75rem;">{{ tx.montant }} {{ tx.devise_origine.code }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span style="border: 1px solid var(--primary); color: var(--primary); padding: 2px 6px; font-size: 0.7rem; text-transform: uppercase;">{{ tx.statut }}</span>
+                    </td>
+                    <td style="padding: 0.75rem;" class="text-muted">{{ tx.date|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted" style="padding: 2rem;">Aucune opération personnelle.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script id="chart-data-raw" type="application/json">{"labels": {{ chart_labels|safe }}, "data": {{ chart_data|safe }}}</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var chartInfo = JSON.parse(document.getElementById('chart-data-raw').textContent);
+        var canvas = document.getElementById('volumeChart');
+        if (!canvas) return;
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartInfo.labels,
+                datasets: [{
+                    label: 'Volume (USD)',
+                    data: chartInfo.data,
+                    borderColor: '#F7931A',
+                    backgroundColor: 'rgba(247, 147, 26, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94A3B8', font: { family: "'JetBrains Mono', monospace" } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94A3B8', font: { family: "'JetBrains Mono', monospace" } }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

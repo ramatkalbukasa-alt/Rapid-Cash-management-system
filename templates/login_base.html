@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RAPID CASH{% endblock %}</title>
+    
+    <!-- Bitcoin DeFi Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        void: '#030304',
+                        surface: '#0F1115',
+                        primary: '#F7931A',
+                        secondary: '#EA580C',
+                        stardust: '#94A3B8',
+                        neonBlue: '#00D1FF',
+                        neonRed: '#FF005C',
+                    },
+                    fontFamily: {
+                        heading: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(247, 147, 26, 0.4)',
+                        'glow-blue': '0 0 20px -5px rgba(0, 209, 255, 0.4)',
+                        'glow-red': '0 0 20px -5px rgba(255, 0, 92, 0.4)',
+                        'glow-strong': '0 0 30px -5px rgba(247, 147, 26, 0.6)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body class="bg-void min-h-screen flex items-center justify-center relative overflow-hidden font-body text-white">
+    
+    <!-- Background Animated Neon Blobs -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-neonBlue opacity-10 rounded-full blur-[150px] animate-pulse"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neonRed opacity-10 rounded-full blur-[150px] animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30%] h-[30%] bg-primary opacity-5 rounded-full blur-[120px]"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-md px-6">
+        {% block content %}{% endblock %}
+    </div>
+
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.15; transform: scale(1.1); }
+        }
+        .animate-pulse { animation: pulse 8s infinite ease-in-out; }
+    </style>
+</body>
+</html>

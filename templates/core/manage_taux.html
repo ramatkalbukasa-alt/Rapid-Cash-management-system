@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Gestion des Taux de Change{% endblock %}
+
+{% block content %}
+<div class="main-container" style="max-width: 800px;">
+    <h2 class="font-heading">Taux de Change (Référence USD)</h2>
+    <p class="text-muted">Mettez à jour les taux de change pour toutes les devises par rapport au dollar américain (USD). Ces taux seront appliqués instantanément sur tout le réseau.</p>
+    
+    <div class="card mt-4">
+        <form method="POST">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                        <th style="padding: 0.75rem;">Devise</th>
+                        <th style="padding: 0.75rem;">Taux actuel</th>
+                        <th style="padding: 0.75rem;">Nouveau Taux</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form, devise in zipped_data %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        {{ form.id }}
+                        <td style="padding: 0.75rem;"><strong class="font-heading">{{ devise.code }}</strong></td>
+                        <td style="padding: 0.75rem;" class="font-mono">{{ devise.taux_reference_usd }}</td>
+                        <td style="padding: 0.75rem;">
+                            {{ form.taux_reference_usd }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">Enregistrer les Nouveaux Taux</button>
+                <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Édition Utilisateur{% else %}Création Utilisateur{% endif %}{% endblock %}
+
+{% block content %}
+<div class="main-container" style="max-width: 600px;">
+    <h2 class="font-heading">{% if form.instance.pk %}Édition : {{ form.instance.username }}{% else %}Nouvel Utilisateur{% endif %}</h2>
+    
+    {% if not form.instance.pk %}
+    <div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--primary); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+        <p style="font-size: 0.9rem; color: var(--text); margin: 0;">
+            <strong>Rôles disponibles :</strong>
+            <ul style="margin: 0.5rem 0 0 1.5rem; font-size: 0.85rem;">
+                <li><strong>Administrateur</strong> : Accès complet à toutes les fonctionnalités et paramètres</li>
+                <li><strong>Agent</strong> : Gestion des transactions et des caisses</li>
+                <li><strong>Associé</strong> : Consultation des contrats et balances de partenaires</li>
+                <li><strong>Investisseur</strong> : Consultation des investissements et rapports</li>
+            </ul>
+        </p>
+    </div>
+    {% endif %}
+    
+    <div class="card mt-4">
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label font-heading" style="font-size: 0.9rem;" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="text-muted">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% if field.errors %}
+                <div style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ field.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <a href="{% url 'core:manage_users' %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

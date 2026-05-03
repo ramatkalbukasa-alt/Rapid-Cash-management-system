@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Édition Transaction - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4 border-b">
+    <h1 class="font-heading">Modifier la Transaction</h1>
+    <p class="text-muted">Mettez à jour le montant, les frais, le statut et enregistrez un motif de modification.</p>
+</div>
+
+<div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div>
+            <h2 class="font-heading" style="font-size: 1rem; margin-bottom: 0.25rem;">Détails de la transaction</h2>
+            <p class="text-muted" style="margin: 0;">N° {{ transaction.numero_transaction }} • {{ transaction.date|date:'d/m/Y H:i' }}</p>
+        </div>
+        <a href="{% url 'core:transaction_management' %}" class="btn btn-outline">Retour à la liste</a>
+    </div>
+
+    <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        <div>
+            <div class="detail-row"><strong>Agent :</strong> {{ transaction.agent.username }}</div>
+            <div class="detail-row"><strong>Type :</strong> {{ transaction.get_type_operation_display }}</div>
+            <div class="detail-row"><strong>Devise :</strong> {{ transaction.devise_origine.code }}</div>
+            <div class="detail-row"><strong>Montant USD :</strong> {{ transaction.montant_reference|floatformat:2 }}</div>
+        </div>
+        <div>
+            <div class="detail-row"><strong>Frais calculés :</strong> {{ transaction.frais_calcules|floatformat:2 }}</div>
+            <div class="detail-row"><strong>Frais USD :</strong> {{ transaction.frais_reference|floatformat:2 }}</div>
+            <div class="detail-row"><strong>Statut :</strong> {{ transaction.get_statut_display }}</div>
+            <div class="detail-row"><strong>Observation :</strong> {{ transaction.observation|default:'Aucune' }}</div>
+        </div>
+    </div>
+</div>
+
+<form method="post" class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+    {% csrf_token %}
+    <h2 class="font-heading" style="font-size: 1rem; margin-bottom: 1rem;">Modifier la transaction</h2>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="form-group">
+            <label class="form-label">{{ form.montant.label }}</label>
+            {{ form.montant }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">{{ form.frais_calcules.label }}</label>
+            {{ form.frais_calcules }}
+        </div>
+    </div>
+
+    <div class="form-group" style="margin-top: 1rem;">
+        <label class="form-label">{{ form.observation.label }}</label>
+        {{ form.observation }}
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+        <div class="form-group">
+            <label class="form-label">{{ form.statut.label }}</label>
+            {{ form.statut }}
+        </div>
+        <div class="form-group">
+            <label class="form-label">{{ form.motif_annulation.label }}</label>
+            {{ form.motif_annulation }}
+        </div>
+    </div>
+
+    <div class="form-group" style="margin-top: 1rem;">
+        <label class="form-label">Motif de modification</label>
+        <textarea name="edit_reason" rows="3" placeholder="Entrez un motif pour la mise à jour administrative" class="textarea"></textarea>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem;">
+        <button type="submit" class="btn btn-primary">Enregistrer la modification</button>
+        <a href="{% url 'core:transaction_management' %}" class="btn btn-outline">Annuler</a>
+    </div>
+</form>
+
+<div class="card" style="padding: 1.5rem;">
+    <h2 class="font-heading" style="font-size: 1rem; margin-bottom: 1rem;">Historique des audits</h2>
+    {% if audits %}
+    <div style="display: grid; gap: 1rem;">
+        {% for audit in audits %}
+        <div class="audit-item">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <strong>{{ audit.action }}</strong>
+                <span class="text-muted">{{ audit.created_at|date:'d/m/Y H:i' }}</span>
+            </div>
+            <div class="text-muted" style="margin: 0.5rem 0;">Par <strong>{{ audit.performed_by.username }}</strong> | IP: <code>{{ audit.ip_address }}</code></div>
+            <div style="display: grid; gap: 0.5rem;">
+                <div><strong>Anciennes valeurs :</strong> <pre class="audit-json">{{ audit.old_values }}</pre></div>
+                <div><strong>Nouvelles valeurs :</strong> <pre class="audit-json">{{ audit.new_values }}</pre></div>
+                <div><strong>Motif :</strong> {{ audit.reason }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Aucun historique d'audit pour cette transaction.</p>
+    {% endif %}
+</div>
+
+<style>
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+}
+
+.textarea {
+    min-height: 120px;
+}
+
+.detail-row {
+    margin-bottom: 0.6rem;
+    color: var(--text);
+}
+
+.audit-item {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 1rem;
+    background: rgba(255,255,255,0.02);
+}
+
+.audit-json {
+    background: rgba(255,255,255,0.04);
+    padding: 0.75rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    color: var(--text);
+}
+
+.btn {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+code {
+    background: rgba(255,255,255,0.05);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

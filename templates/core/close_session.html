@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Clôturer la Caisse{% endblock %}
+
+{% block content %}
+<div class="main-container" style="max-width: 600px;">
+    <h2>Clôture de Caisse</h2>
+    <p class="text-muted">Veuillez compter physiquement les espèces dans votre tiroir et déclarer le montant final.</p>
+    
+    <div class="card mt-4">
+        <form method="POST">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }} ({{ caisse.devise.code }})</label>
+                {{ field }}
+                {% if field.errors %}
+                <div style="color: var(--danger); font-size: 0.875rem;">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Confirmez-vous le montant déclaré ? Cette action clôturera votre session.');">Valider la Clôture</button>
+                <a href="{% url 'core:agent_dashboard' %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

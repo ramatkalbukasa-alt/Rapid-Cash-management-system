@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% block title %}Gestion des Transactions - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4 border-b">
+    <h1 class="font-heading">Gestion des Transactions</h1>
+    <p class="text-muted">Recherchez, filtrez et éditez les transactions avec historique d'audit.</p>
+</div>
+
+<div class="grid mt-6" style="grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+    <div class="card" style="padding: 1.5rem;">
+        <h2 class="font-heading" style="font-size: 1rem; margin-bottom: 1rem;">Filtres de Requête</h2>
+        <form method="get" class="space-y-4">
+            <div class="form-group">
+                <label class="form-label">{{ search_form.numero_transaction.label }}</label>
+                {{ search_form.numero_transaction }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ search_form.agent.label }}</label>
+                {{ search_form.agent }}
+            </div>
+            <div class="form-row" style="display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr));">
+                <div class="form-group">
+                    <label class="form-label">{{ search_form.type_operation.label }}</label>
+                    {{ search_form.type_operation }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ search_form.statut.label }}</label>
+                    {{ search_form.statut }}
+                </div>
+            </div>
+            <div class="form-row" style="display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr));">
+                <div class="form-group">
+                    <label class="form-label">{{ search_form.date_from.label }}</label>
+                    {{ search_form.date_from }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ search_form.date_to.label }}</label>
+                    {{ search_form.date_to }}
+                </div>
+            </div>
+            <div class="form-row" style="display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr));">
+                <div class="form-group">
+                    <label class="form-label">{{ search_form.montant_min.label }}</label>
+                    {{ search_form.montant_min }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ search_form.montant_max.label }}</label>
+                    {{ search_form.montant_max }}
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+                <a href="{% url 'core:transaction_management' %}" class="btn btn-outline">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
+    <div>
+        <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem;">
+            <div>
+                <h2 class="font-heading" style="font-size: 1rem; margin: 0 0 0.25rem;">Vue des Transactions</h2>
+                <p class="text-muted" style="margin: 0;">{{ total_transactions }} transactions trouvées</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="{% url 'core:export_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline">Exporter CSV</a>
+                <a href="{% url 'core:export_excel' %}?{{ request.GET.urlencode }}" class="btn btn-outline">Exporter Excel</a>
+            </div>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 860px;">
+                <thead>
+                    <tr style="background: rgba(247, 147, 26, 0.05); text-align: left;">
+                        <th style="padding: 0.85rem;">N°</th>
+                        <th style="padding: 0.85rem;">Date</th>
+                        <th style="padding: 0.85rem;">Agent</th>
+                        <th style="padding: 0.85rem;">Type</th>
+                        <th style="padding: 0.85rem;">Montant</th>
+                        <th style="padding: 0.85rem;">Devise</th>
+                        <th style="padding: 0.85rem;">Frais</th>
+                        <th style="padding: 0.85rem;">Statut</th>
+                        <th style="padding: 0.85rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr style="border-top: 1px solid var(--border);">
+                        <td style="padding: 0.85rem;">{{ transaction.numero_transaction }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.date|date:'d/m/Y H:i' }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.agent.username }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.get_type_operation_display }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.montant|floatformat:2 }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.devise_origine.code }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.frais_calcules|floatformat:2 }}</td>
+                        <td style="padding: 0.85rem;">{{ transaction.get_statut_display }}</td>
+                        <td style="padding: 0.85rem;">
+                            <a href="{% url 'core:transaction_edit' transaction.id %}" class="btn btn-small btn-outline">Modifier</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Aucune transaction trouvée pour les filtres sélectionnés.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div style="margin-top: 1rem; display: flex; justify-content: center;">
+            <nav>
+                <ul class="pagination" style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1&{{ request.GET.urlencode }}">Première</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Précédente</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Suivante</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode }}">Dernière</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.btn-small {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+}
+
+.form-group,
+.form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+input,
+select {
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+}
+
+.btn {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-outline {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.btn:hover,
+.btn-outline:hover {
+    opacity: 0.95;
+}
+
+.pagination {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.page-item {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.page-link {
+    display: inline-block;
+    padding: 0.65rem 1rem;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    background: var(--primary);
+    color: white;
+}
+</style>
+{% endblock %}

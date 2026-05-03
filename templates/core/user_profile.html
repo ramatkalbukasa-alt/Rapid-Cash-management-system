@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Profil - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="main-container" style="max-width: 600px;">
+    <div class="card">
+        <h2 class="mb-4 font-heading">Modifier mon profil</h2>
+        
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+            {% if user.photo %}
+            <img src="{{ user.photo.url }}" alt="{{ user.username }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); box-shadow: var(--shadow-glow);">
+            {% else %}
+            <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--surface); border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-family: 'Space Grotesk', sans-serif; box-shadow: var(--shadow-glow);">
+                {{ user.username|first|upper }}
+            </div>
+            {% endif %}
+            <div>
+                <h3 class="font-heading" style="margin: 0; font-size: 1.5rem;">{{ user.get_full_name|default:user.username }}</h3>
+                <p class="text-muted font-mono" style="margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">{{ user.get_role_display }}</p>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label font-bold">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+                {% if field.help_text %}
+                <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.25rem;">{{ field.help_text }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                <a href="{% url 'core:dashboard_redirect' %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;">
+        <h3 class="font-heading">Sécurité du compte</h3>
+        <p class="text-muted">La sécurité de votre compte est une priorité cryptographique.</p>
+        
+        {% if not user.otp_device_id %}
+        <div style="margin-top: 1.5rem; padding: 1.5rem; border-radius: 12px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2);">
+            <h4 class="font-heading" style="color: var(--danger); margin: 0;">Double authentification (2FA)</h4>
+            <p class="text-muted" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">La 2FA est recommandée pour sécuriser vos actifs numériques.</p>
+            <a href="{% url 'two_factor:setup' %}" class="btn btn-primary">Configurer la 2FA</a>
+        </div>
+        {% else %}
+        <div style="margin-top: 1.5rem; padding: 1.5rem; border-radius: 12px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2);">
+            <h4 class="font-heading" style="color: var(--success); margin: 0;">2FA Activée</h4>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                <span class="pulse-indicator"></span>
+                <p class="text-muted" style="margin:0;">Votre compte est protégé par la 2FA.</p>
+            </div>
+            <a href="{% url 'two_factor:profile' %}" class="btn btn-outline">Gérer la sécurité</a>
+        </div>
+        {% endif %}
+    </div>
+    </div>
+</div>
+{% endblock %}

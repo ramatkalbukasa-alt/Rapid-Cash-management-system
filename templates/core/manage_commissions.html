@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Commissions{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>💵 Gestion des Commissions</h1>
+            <p class="text-muted">Configuration des taux de commission pour les agents</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'core:admin_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Commission Rates Table -->
+    {% if agents_commissions %}
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Agent</th>
+                    <th>Nom Complet</th>
+                    <th>Taux de Commission (%)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in agents_commissions %}
+                <tr>
+                    <td>
+                        <strong>@{{ item.agent.username }}</strong>
+                    </td>
+                    <td>
+                        {{ item.agent.get_full_name }}
+                        <br>
+                        <small class="text-muted">{{ item.agent.telephone }}</small>
+                    </td>
+                    <td>
+                        <h5>
+                            <span class="badge bg-primary fs-6">{{ item.commission_pct }}%</span>
+                        </h5>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" 
+                                data-bs-target="#editCommissionModal" 
+                                onclick="setCommissionData({{ item.agent.id }}, '{{ item.agent.get_full_name }}', {{ item.commission_pct }})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> Aucun agent disponible.
+    </div>
+    {% endif %}
+
+    <!-- Information Card -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">ℹ️ À propos des Commissions</h5>
+        </div>
+        <div class="card-body">
+            <p>
+                Les commissions sont calculées automatiquement basées sur:
+            </p>
+            <ul>
+                <li><strong>Les frais collectés</strong> - Basés sur le tarif de transaction</li>
+                <li><strong>Le taux de commission</strong> - Pourcentage configuré pour chaque agent</li>
+                <li><strong>Le type d'opération</strong> - Uniquement sur les TRANSFERTS, pas les RETRAITS</li>
+            </ul>
+            <p class="mb-0 mt-3">
+                <strong>Formule:</strong> Commission = Frais Collectés × (Taux de Commission / 100)
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Commission Modal -->
+<div class="modal fade" id="editCommissionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifier Taux de Commission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editCommissionForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Agent</label>
+                        <input type="text" class="form-control" id="agentName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Taux de Commission (%)</label>
+                        <input type="number" class="form-control" id="commissionRate" 
+                               name="commission_rate" min="0" max="100" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function setCommissionData(agentId, agentName, currentRate) {
+    document.getElementById('agentName').value = agentName;
+    document.getElementById('commissionRate').value = currentRate;
+    // Store agentId for form submission if needed
+    document.getElementById('editCommissionForm').dataset.agentId = agentId;
+}
+</script>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    .badge {
+        font-size: 1.1rem;
+        padding: 0.6rem 1rem;
+    }
+</style>
+{% endblock %}

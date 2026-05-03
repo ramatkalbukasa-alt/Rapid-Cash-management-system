@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static custom_filters %}
+
+{% block title %}Mon Solde Partenaire{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>💰 Mon Solde Financier</h1>
+            <p class="text-muted">
+                {% if request.user.role == 'ASSOCIE' %}
+                    Vue d'ensemble de vos contrats en tant qu'Associé
+                {% else %}
+                    Vue d'ensemble de vos contrats en tant qu'Investisseur
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if request.user.role == 'ASSOCIE' %}
+            <a href="{% url 'core:associe_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            {% else %}
+            <a href="{% url 'core:investisseur_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Engagé</h6>
+                    <h3 class="text-primary fw-bold">${{ total_engaged|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Payé</h6>
+                    <h3 class="text-success fw-bold">${{ total_paid|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Solde Restant</h6>
+                    <h3 class="text-danger fw-bold">${{ balance|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Nombre de Contrats</h6>
+                    <h3 class="text-info fw-bold">{{ contract_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contracts Table -->
+    {% if contracts %}
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">📋 Mes Contrats</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date Début</th>
+                        <th>Montant Engagé</th>
+                        <th>Montant Payé</th>
+                        <th>Solde Restant</th>
+                        <th>Progrès</th>
+                        <th>Dernier Paiement</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in contracts %}
+                    <tr>
+                        <td>{{ item.contract.date_debut|date:"d/m/Y" }}</td>
+                        <td>
+                            <strong class="text-primary">${{ item.contract.montant_engage|floatformat:2 }}</strong>
+                        </td>
+                        <td>
+                            <strong class="text-success">${{ item.contract.montant_paye|floatformat:2 }}</strong>
+                        </td>
+                        <td>
+                            <strong class="text-danger">${{ item.remaining|floatformat:2 }}</strong>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ item.contract.montant_paye|calc_percentage:item.contract.montant_engage }}%;" 
+                                     aria-valuenow="{{ item.contract.montant_paye|calc_percentage:item.contract.montant_engage }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ item.contract.montant_paye|calc_percentage:item.contract.montant_engage|floatformat:0 }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.last_payment %}
+                                {{ item.last_payment.date|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'core:contract_detail' contract_id=item.contract.id %}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Détails
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle"></i> Vous n'avez pas de contrats actuellement.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

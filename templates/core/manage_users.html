@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 class="font-heading">Gestion des Utilisateurs</h1>
+        <a href="{% url 'core:user_create' %}" class="btn btn-primary">+ Nouvel Utilisateur</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div style="overflow-x: auto;">
+            <table width="100%" style="border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="padding: 1rem;">ID</th>
+                        <th style="padding: 1rem;">Nom</th>
+                        <th style="padding: 1rem;">Rôle</th>
+                        <th style="padding: 1rem;">Téléphone</th>
+                        <th style="padding: 1rem;">Statut</th>
+                        <th style="padding: 1rem; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem;" class="font-mono text-muted">{{ u.username }}</td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                {% if u.photo %}
+                                    <img src="{{ u.photo.url }}" alt="" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);">
+                                {% else %}
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border);">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="font-heading" style="font-weight: 600;">{{ u.get_full_name }}</div>
+                                    <small class="text-muted font-mono" style="font-size: 0.75rem;">{{ u.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span class="font-mono" style="background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase;">{{ u.get_role_display }}</span>
+                        </td>
+                        <td style="padding: 1rem;" class="font-mono">{{ u.telephone|default:"-" }}</td>
+                        <td style="padding: 1rem;">
+                            {% if u.is_active %}
+                            <span style="border: 1px solid var(--success); color: var(--success); padding: 4px 10px; font-size: 0.75rem; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; background: rgba(16, 185, 129, 0.1);">Actif</span>
+                            {% else %}
+                            <span style="border: 1px solid var(--danger); color: var(--danger); padding: 4px 10px; font-size: 0.75rem; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; background: rgba(239, 68, 68, 0.1);">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <a href="{% url 'core:user_update' u.pk %}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Éditer</a>
+                            
+                            <form method="POST" action="{% url 'core:user_toggle' u.pk %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn {% if u.is_active %}btn-outline{% else %}btn-primary{% endif %}" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
+                                </button>
+                            </form>
+                            
+                            <form method="POST" action="{% url 'core:user_reset_pwd' u.pk %}" style="margin: 0;" onsubmit="return confirm('Réinitialiser le mot de passe ?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--danger); border-color: var(--danger);">Reset Mdp</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
