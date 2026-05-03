@@ -5,6 +5,29 @@
 - Compte GitHub (pousser le code)
 - Compte Render.com (gratuit: https://render.com)
 - PostgreSQL sera créé automatiquement par Render
+- ⚠️ **IMPORTANT:** Fichier `runtime.txt` avec `python-3.11.8` (force version stable)
+
+---
+
+## 🐍 **FICHIER CRITIQUE: runtime.txt**
+
+**Pourquoi c'est important?** 
+Render utilise par défaut la dernière version Python (3.14+). Cela peut casser vos dépendances. Le fichier `runtime.txt` force Python 3.11.8 (stable, testé, production-ready).
+
+**Vérifier que le fichier existe:**
+```bash
+# À la racine du projet
+cat runtime.txt
+# Doit afficher: python-3.11.8
+```
+
+Si absent, créez-le:
+```bash
+echo "python-3.11.8" > runtime.txt
+git add runtime.txt
+git commit -m "fix: Add Python version lock"
+git push origin main
+```
 
 ---
 

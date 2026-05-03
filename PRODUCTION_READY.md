@@ -70,6 +70,7 @@
 
 ### Deployment Files Created
 - [x] **requirements.txt** - All Python dependencies
+- [x] **runtime.txt** - Python 3.11.8 version lock (fixes Render default)
 - [x] **Procfile** - Release & web commands
 - [x] **render.yaml** - Complete Render deployment config
 - [x] **build.sh** - Automated build script
@@ -77,6 +78,7 @@
 - [x] **.gitignore** - Secure file exclusion
 - [x] **DEPLOYMENT.md** - Step-by-step guide
 - [x] **GMAIL_SMTP_SETUP.md** - Email setup guide
+- [x] **PYTHON_VERSION_FIX.md** - Python version compatibility guide
 
 ### Git Repository
 - [x] Repository initialized
@@ -263,6 +265,7 @@ Before clicking "Deploy" on Render:
 
 - [ ] GitHub repository is public or Render has access
 - [ ] All changes committed and pushed to `main` branch
+- [ ] `runtime.txt` exists with `python-3.11.8`
 - [ ] PostgreSQL database created in Render
 - [ ] All 8 environment variables added
 - [ ] `render.yaml` is in root directory
@@ -271,6 +274,7 @@ Before clicking "Deploy" on Render:
 - [ ] `build.sh` has executable permissions
 - [ ] Django check passes: `python manage.py check`
 - [ ] No hardcoded secrets in code
+- [ ] All dependencies verified for Python 3.11 compatibility
 
 ---
 
@@ -289,11 +293,13 @@ Before clicking "Deploy" on Render:
 | Problem | Solution |
 |---------|----------|
 | Build fails | Check `requirements.txt` - all packages must exist on PyPI |
+| Python version wrong | Check `runtime.txt` contains `python-3.11.8` |
 | Database error | Verify `DATABASE_URL` environment variable |
 | Static 404s | Run `python manage.py collectstatic --noinput` |
 | Email not sending | Verify EMAIL_HOST_USER and EMAIL_HOST_PASSWORD |
 | App won't start | Check logs: Render Dashboard → Logs |
 | CSRF token error | Ensure ALLOWED_HOSTS includes your domain |
+| Dependency incompatibility | See PYTHON_VERSION_FIX.md for compatibility matrix |
 
 ---
 
