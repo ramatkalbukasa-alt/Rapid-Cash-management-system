@@ -5,8 +5,7 @@ services:
     region: frankfurt
     plan: free
     buildCommand: bash build.sh
-    startCommand: gunicorn quick_transfert.wsgi --workers 1
-    releaseCommand: python manage.py migrate && python manage.py collectstatic --noinput
+    startCommand: gunicorn app:app
     healthCheckPath: /
     envVars:
       - key: DEBUG
@@ -20,7 +19,7 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
-        value: "*.render.com"
+        value: "*.onrender.com"
 
 databases:
   - name: quick_transfert_db
