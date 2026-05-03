@@ -28,11 +28,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY', default='django-insecure-change-this-in
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default='False', cast=bool)
 
-ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.onrender.com').split(',')]
-
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -89,23 +85,14 @@ WSGI_APPLICATION = "quick_transfert.wsgi.application"  # RAPID CASH
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Use PostgreSQL in production via DATABASE_URL, fallback to SQLite for dev
-# Use PostgreSQL in production via DATABASE_URL, fallback to SQLite for dev
-if os.environ.get('RENDER'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-    # If DATABASE_URL is missing on Render, dj_database_url.config() will return an empty dict
-    # which will cause Django to fail early with a clear error.
-else:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        )
-    }
+# Force use of DATABASE_URL on Render
+DATABASES = {
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 
 
 # Password validation
@@ -171,4 +158,3 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
