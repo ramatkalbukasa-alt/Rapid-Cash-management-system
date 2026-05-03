@@ -10,7 +10,11 @@ from django.db import connection, transaction
 from django.core.management import call_command
 
 def fix_database():
-    print("--- 🩺 DIAGNOSTIC BASE DE DONNÉES ---")
+    db_settings = connection.settings_dict
+    print(f"--- 🩺 DIAGNOSTIC BASE DE DONNÉES ---")
+    print(f"Host: {db_settings.get('HOST')}")
+    print(f"Database: {db_settings.get('NAME')}")
+    
     with connection.cursor() as cursor:
         # 1. Lister les tables
         cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
