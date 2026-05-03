@@ -1,6 +1,9 @@
 services:
   - type: web
     name: quick-transfert
+services:
+  - type: web
+    name: quick-transfert
     env: python
     region: oregon
     plan: free
@@ -12,17 +15,6 @@ services:
         value: false
       - key: PYTHON_VERSION
         value: 3.11.9
-      - key: DATABASE_URL
-        fromDatabase:
-          name: quick_transfert_db
-          property: connectionString
-      - key: DJANGO_SECRET_KEY
-        generateValue: true
       - key: ALLOWED_HOSTS
         value: "*.onrender.com"
-
-databases:
-  - name: quick_transfert_db
-    databaseName: quick_transfert
-    user: postgres
-    region: oregon
+      # Le DATABASE_URL sera géré manuellement dans le Dashboard Render
