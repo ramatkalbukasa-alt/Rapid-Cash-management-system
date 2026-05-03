@@ -2,10 +2,10 @@ services:
   - type: web
     name: quick-transfert
     env: python
-    region: frankfurt
+    region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate --noinput && gunicorn app:app
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start_prod.sh
     healthCheckPath: /
     envVars:
       - key: DEBUG
@@ -25,4 +25,4 @@ databases:
   - name: quick_transfert_db
     databaseName: quick_transfert
     user: postgres
-    region: frankfurt
+    region: oregon
