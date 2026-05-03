@@ -146,7 +146,8 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-# WHITENOISE_MANIFEST_STRICT = False  # Not needed for CompressedStaticFilesStorage
+WHITENOISE_USE_FINDERS = True # Fallback to STATICFILES_DIRS if not in STATIC_ROOT
+# WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
