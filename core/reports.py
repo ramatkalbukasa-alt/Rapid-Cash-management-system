@@ -114,7 +114,7 @@ def generate_report(request, period):
     
     user_profile = f"{user.get_full_name()} ({role_labels.get(user.role, user.role)})"
     generation_date = now.strftime('%d/%m/%Y %H:%M')
-    company_name = 'Quick Transfert'
+    company_name = 'Rapid Cash'
 
     # Format KPI values
     def format_currency(value):

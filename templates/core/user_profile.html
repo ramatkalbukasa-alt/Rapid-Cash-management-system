@@ -7,17 +7,17 @@
     <div class="card">
         <h2 class="mb-4 font-heading">Modifier mon profil</h2>
         
-        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);">
+        <div class="profile-header">
             {% if user.photo %}
-            <img src="{{ user.photo.url }}" alt="{{ user.username }}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); box-shadow: var(--shadow-glow);">
+            <img src="{{ user.photo.url }}" alt="{{ user.username }}" class="profile-avatar">
             {% else %}
-            <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--surface); border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-family: 'Space Grotesk', sans-serif; box-shadow: var(--shadow-glow);">
+            <div class="profile-avatar-placeholder">
                 {{ user.username|first|upper }}
             </div>
             {% endif %}
-            <div>
-                <h3 class="font-heading" style="margin: 0; font-size: 1.5rem;">{{ user.get_full_name|default:user.username }}</h3>
-                <p class="text-muted font-mono" style="margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">{{ user.get_role_display }}</p>
+            <div class="profile-info">
+                <h3 class="font-heading">{{ user.get_full_name|default:user.username }}</h3>
+                <p class="text-muted font-mono">{{ user.get_role_display }}</p>
             </div>
         </div>
 
@@ -38,7 +38,7 @@
             </div>
             {% endfor %}
 
-            <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+            <div class="profile-actions" style="display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
                 <a href="{% url 'core:dashboard_redirect' %}" class="btn btn-outline">Annuler</a>
             </div>

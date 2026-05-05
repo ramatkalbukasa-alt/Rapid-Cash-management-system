@@ -1,18 +1,18 @@
 # ?? RAPID CASH
 
-RAPID CASH est un système de gestion de transferts financiers et de caisses, conçu pour les administrateurs, agents, associés et investisseurs.
+RAPID CASH est un systï¿½me de gestion de transferts financiers et de caisses, conï¿½u pour les administrateurs, agents, associï¿½s et investisseurs.
 
-## Fonctionnalités clés
+## Fonctionnalitï¿½s clï¿½s
 
 - Gestion des transactions de **transfert** et **retrait**
-- Calcul automatique des frais selon les tarifs définis
+- Calcul automatique des frais selon les tarifs dï¿½finis
 - Support multi-devises et conversion vers USD
 - Gestion des caisses par agent
 - Suivi des commissions et performance des agents
 - Journal d'audit immuable pour toutes les modifications
 - Export CSV et Excel des transactions
-- Interface d'administration complète
-- **API REST** minimale pour intégration externe
+- Interface d'administration complï¿½te
+- **API REST** minimale pour intï¿½gration externe
 
 ## Installation rapide
 
@@ -26,7 +26,7 @@ cd "c:\Users\User\Desktop\Quick transfert"
 .\venv\Scripts\Activate.ps1
 ```
 
-3. Installer les dépendances :
+3. Installer les dï¿½pendances :
 ```powershell
 pip install -r requirements.txt
 ```
@@ -38,7 +38,7 @@ $env:DJANGO_SECRET_KEY = "your-secret-key"
 $env:ALLOWED_HOSTS = "localhost,127.0.0.1"
 ```
 
-5. Démarrer le serveur :
+5. Dï¿½marrer le serveur :
 ```powershell
 python manage.py runserver
 ```
@@ -49,36 +49,36 @@ Le site est disponible sur `http://127.0.0.1:8000/`.
 
 | URL | Description |
 |---|---|
-| `/` | Redirection vers le tableau de bord selon le rôle |
+| `/` | Redirection vers le tableau de bord selon le rï¿½le |
 | `/admin-dashboard/` | Tableau de bord administrateur |
 | `/agent-dashboard/` | Tableau de bord agent |
-| `/associe-dashboard/` | Tableau de bord associé |
+| `/associe-dashboard/` | Tableau de bord associï¿½ |
 | `/investisseur-dashboard/` | Tableau de bord investisseur |
 | `/manage-users/` | Gestion des utilisateurs |
-| `/system-settings/` | Paramètres système |
-| `/transaction-management/` | Gestion avancée des transactions |
+| `/system-settings/` | Paramï¿½tres systï¿½me |
+| `/transaction-management/` | Gestion avancï¿½e des transactions |
 | `/export/transactions/csv/` | Export CSV |
 | `/export/transactions/excel/` | Export Excel |
 
 ## API REST
 
-L'API REST utilise des jetons d'API (`Token <clé>`) avec des permissions basées sur `APIToken`.
+L'API REST utilise des jetons d'API (`Token <clï¿½>`) avec des permissions basï¿½es sur `APIToken`.
 
 ### Points de terminaison
 
 - `GET /core/api/transactions/` : liste des transactions
-- `POST /core/api/transactions/` : création d'une transaction
-- `GET /core/api/transactions/<id>/` : détails d'une transaction
-- `GET /core/api/system-settings/` : configuration système
+- `POST /core/api/transactions/` : crï¿½ation d'une transaction
+- `GET /core/api/transactions/<id>/` : dï¿½tails d'une transaction
+- `GET /core/api/system-settings/` : configuration systï¿½me
 
-### En-tête d'authentification
+### En-tï¿½te d'authentification
 
-Ajoutez ce header à vos requêtes :
+Ajoutez ce header ï¿½ vos requï¿½tes :
 ```
 Authorization: Token <votre_token_api>
 ```
 
-### Exemple de création de transaction
+### Exemple de crï¿½ation de transaction
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/core/api/transactions/" \
@@ -93,25 +93,25 @@ curl -X POST "http://127.0.0.1:8000/core/api/transactions/" \
   }'
 ```
 
-## Sécurité API
+## Sï¿½curitï¿½ API
 
-- Les jetons doivent être actifs et ne pas être expirés.
-- La fonctionnalité API doit être activée dans les paramètres système.
-- Les permissions d'API sont contrôlées via le modèle `APIToken`.
+- Les jetons doivent ï¿½tre actifs et ne pas ï¿½tre expirï¿½s.
+- La fonctionnalitï¿½ API doit ï¿½tre activï¿½e dans les paramï¿½tres systï¿½me.
+- Les permissions d'API sont contrï¿½lï¿½es via le modï¿½le `APIToken`.
 
 ## Maintenance
 
-- Les paramètres système sont disponibles à `/core/system-settings/`.
-- Les transactions peuvent être recherchées, filtrées et modifiées par l'administrateur.
+- Les paramï¿½tres systï¿½me sont disponibles ï¿½ `/core/system-settings/`.
+- Les transactions peuvent ï¿½tre recherchï¿½es, filtrï¿½es et modifiï¿½es par l'administrateur.
 - Les journaux d'audit conservent toutes les modifications importantes.
 
 ---
 
 ## Notes
 
-Le projet est configuré pour fonctionner dans un environnement Windows avec Django 4.2.9 et Python 3.11.
+Le projet est configurï¿½ pour fonctionner dans un environnement Windows avec Django 4.2.9 et Python 3.11.
 
-Pour toute modification dans le code, exécutez :
+Pour toute modification dans le code, exï¿½cutez :
 ```powershell
 python manage.py check
 ```
