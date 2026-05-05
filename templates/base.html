@@ -146,7 +146,7 @@
                                 {% if unread.count > 0 %} <span style="position: absolute; top: -5px; right: -5px; background: var(--danger); width: 14px; height: 14px; border-radius: 50%; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; color: white;">{{ unread.count }}</span> {% endif %}
                             {% endwith %}
                         </button>
-                        <div x-show="notifOpen" @click.away="notifOpen = false" style="display: none; position: absolute; right: 0; margin-top: 0.5rem; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-glow); z-index: 50; width: 300px; max-height: 400px; overflow-y: auto; border-radius: 8px;">
+                        <div x-show="notifOpen" @click.away="notifOpen = false" style="display: none; position: absolute; right: 0; margin-top: 0.5rem; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-glow); z-index: 50; width: min(300px, calc(100vw - 2rem)); max-height: 400px; overflow-y: auto; border-radius: 8px;">
                             <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-family: 'Space Grotesk', sans-serif;">Dernières Notifications</div>
                             {% for notif in user.notifications.all|slice:":10" %}
                             <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.875rem;">

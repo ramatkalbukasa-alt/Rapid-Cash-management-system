@@ -16,7 +16,7 @@
         <a href="{% url 'core:transaction_management' %}" class="btn btn-outline">Retour à la liste</a>
     </div>
 
-    <div class="grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
         <div>
             <div class="detail-row"><strong>Agent :</strong> {{ transaction.agent.username }}</div>
             <div class="detail-row"><strong>Type :</strong> {{ transaction.get_type_operation_display }}</div>
@@ -36,7 +36,7 @@
     {% csrf_token %}
     <h2 class="font-heading" style="font-size: 1rem; margin-bottom: 1rem;">Modifier la transaction</h2>
 
-    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
         <div class="form-group">
             <label class="form-label">{{ form.montant.label }}</label>
             {{ form.montant }}
@@ -52,7 +52,7 @@
         {{ form.observation }}
     </div>
 
-    <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
         <div class="form-group">
             <label class="form-label">{{ form.statut.label }}</label>
             {{ form.statut }}

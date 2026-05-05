@@ -19,35 +19,35 @@
     </div>
 </div>
 
-<div class="grid mt-4" style="{% if user_role == 'ADMINISTRATEUR' %}grid-template-columns: 1fr 1fr 1fr;{% else %}grid-template-columns: 1fr 1fr;{% endif %} gap: 1.5rem;">
+<div class="grid mt-4" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
     <div class="card text-center" style="border-left: 4px solid var(--primary);">
         <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Volume Traité Global</h3>
-        <p style="font-size: 2rem; font-weight: 700;">{{ volume|floatformat:2 }} $</p>
+        <p class="financial-amount">{{ volume|floatformat:2 }} $</p>
     </div>
     
     <div class="card text-center" style="border-left: 4px solid var(--success);">
         <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Frais Collectés (Brut)</h3>
-        <p style="font-size: 2rem; font-weight: 700;">{{ frais|floatformat:2 }} $</p>
+        <p class="financial-amount">{{ frais|floatformat:2 }} $</p>
     </div>
 
     {% if user_role == 'ADMINISTRATEUR' %}
     <div class="card text-center" style="border-left: 4px solid var(--danger);">
         <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Dépenses Admin</h3>
-        <p style="font-size: 2rem; font-weight: 700;">{{ depenses|floatformat:2 }} $</p>
+        <p class="financial-amount">{{ depenses|floatformat:2 }} $</p>
     </div>
     {% endif %}
 </div>
 
 {% if user_role == 'ADMINISTRATEUR' %}
-<div class="grid mt-4" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+<div class="grid mt-4" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
     <div class="card text-center" style="border-left: 4px solid #f59e0b;">
         <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase;">Commissions Agents (Estimées)</h3>
-        <p style="font-size: 2rem; font-weight: 700;">{{ commissions|floatformat:2 }} $</p>
+        <p class="financial-amount">{{ commissions|floatformat:2 }} $</p>
     </div>
 
     <div class="card text-center" style="border-left: 4px solid #10b981; background-color: #f0fdf4;">
         <h3 class="text-muted" style="font-size: 0.875rem; text-transform: uppercase; color: #047857;">Bénéfice Net</h3>
-        <p style="font-size: 2rem; font-weight: 700; color: #047857;">{{ benefice|floatformat:2 }} $</p>
+        <p class="financial-amount" style="color: #047857;">{{ benefice|floatformat:2 }} $</p>
     </div>
 </div>
 {% endif %}
