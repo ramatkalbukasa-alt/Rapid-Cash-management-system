@@ -39,7 +39,11 @@ CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)
 CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
     "https://rapid-cash-management-system-5.onrender.com",
-    "https://rapid-cash-management-system-6.onrender.com"
+    "https://rapid-cash-management-system-6.onrender.com",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:56752",
+    "http://localhost:8000",
+    "http://localhost:56752",
 ]
 
 

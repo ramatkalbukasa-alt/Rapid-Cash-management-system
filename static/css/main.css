@@ -1,24 +1,26 @@
 :root {
-    /* Bitcoin DeFi Palette */
-    --void: #030304; /* True Void */
-    --surface: #0F1115; /* Dark Matter */
-    --text: #FFFFFF; /* Pure Light */
-    --text-muted: #94A3B8; /* Stardust */
-    --border: #1E293B; /* Dim Boundary */
+    /* Rapid Cash Brand Identity */
+    --void: #0B0F14; /* Noir profond */
+    --surface: #111820; /* Surface sombre */
+    --text: #F5F7F8; /* Blanc cassé */
+    --text-muted: #94A3B8; /* Gris clair */
+    --border: #1E293B; /* Bordure subtile */
     
-    --primary: #F7931A; /* Bitcoin Orange */
-    --secondary: #EA580C; /* Burnt Orange */
-    --tertiary: #FFD600; /* Digital Gold */
+    --primary: #006B4F; /* Vert Émeraude Fintech */
+    --secondary: #014D4E; /* Vert sombre moderne */
+    --tertiary: #D4A437; /* Or Premium */
     
     --danger: #ef4444; 
     --success: #10b981;
+    --info: #3b82f6;
+    --warning: #eab308;
     
     --radius-card: 16px; /* rounded-2xl */
     --radius-pill: 9999px; /* rounded-full */
     
-    --shadow-glow: 0 0 20px -5px rgba(234, 88, 12, 0.5);
-    --shadow-glow-strong: 0 0 30px -5px rgba(247, 147, 26, 0.6);
-    --shadow-card-hover: 0 0 30px -10px rgba(247, 147, 26, 0.2);
+    --shadow-glow: 0 0 20px -5px rgba(0, 107, 79, 0.5);
+    --shadow-glow-strong: 0 0 30px -5px rgba(0, 107, 79, 0.6);
+    --shadow-card-hover: 0 0 30px -10px rgba(212, 164, 55, 0.2);
 }
 
 * {
@@ -38,7 +40,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Background Grid Pattern (Blockchain network theme) */
+/* Background Grid Pattern (Fintech network theme) */
 body::before {
     content: '';
     position: fixed;
@@ -46,14 +48,14 @@ body::before {
     z-index: -2;
     background-size: 50px 50px;
     background-image:
-      linear-gradient(to right, rgba(30, 41, 59, 0.5) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(30, 41, 59, 0.5) 1px, transparent 1px);
+      linear-gradient(to right, rgba(0, 107, 79, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 107, 79, 0.08) 1px, transparent 1px);
     -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
     mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
     pointer-events: none;
 }
 
-/* Cosmic Blur (Ambient Lighting) */
+/* Ambient Lighting (Emerald glow) */
 body::after {
     content: '';
     position: absolute;
@@ -62,7 +64,7 @@ body::after {
     width: 60vw;
     height: 60vh;
     background: var(--primary);
-    opacity: 0.05;
+    opacity: 0.06;
     filter: blur(150px);
     z-index: -1;
     pointer-events: none;
@@ -74,7 +76,7 @@ body::after {
 .font-body { font-family: 'Inter', sans-serif; }
 .font-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 .text-gradient {
-    background-image: linear-gradient(to right, var(--primary), var(--tertiary));
+    background-image: linear-gradient(to right, var(--tertiary), #e8c04a);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -189,10 +191,10 @@ h3 { font-size: 1.5rem; }
 }
 
 .sidebar-link:hover, .sidebar-link.active {
-    background-color: rgba(255, 255, 255, 0.03);
-    color: var(--primary);
-    border: 1px solid rgba(247, 147, 26, 0.2);
-    box-shadow: inset 0 0 20px -10px rgba(247, 147, 26, 0.2);
+    background-color: rgba(0, 107, 79, 0.08);
+    color: var(--tertiary);
+    border: 1px solid rgba(0, 107, 79, 0.3);
+    box-shadow: inset 0 0 20px -10px rgba(0, 107, 79, 0.3);
 }
 
 .sidebar-link svg {
@@ -276,8 +278,8 @@ h3 { font-size: 1.5rem; }
 
 .hamburger-btn:hover {
     border-color: var(--primary);
-    color: var(--primary);
-    box-shadow: 0 0 15px -5px rgba(247, 147, 26, 0.4);
+    color: var(--tertiary);
+    box-shadow: 0 0 15px -5px rgba(0, 107, 79, 0.4);
 }
 
 .mobile-backdrop {
@@ -313,7 +315,7 @@ h3 { font-size: 1.5rem; }
 
 .card:hover {
     transform: translateY(-4px);
-    border-color: rgba(247, 147, 26, 0.5); /* Primary orange @ 50% */
+    border-color: rgba(0, 107, 79, 0.5);
     box-shadow: var(--shadow-card-hover);
 }
 
@@ -388,8 +390,8 @@ h3 { font-size: 1.5rem; }
 
 .form-control:focus {
     outline: none;
-    border-bottom-color: var(--primary);
-    box-shadow: 0 10px 20px -10px rgba(247, 147, 26, 0.3);
+    border-bottom-color: var(--tertiary);
+    box-shadow: 0 10px 20px -10px rgba(212, 164, 55, 0.3);
     background-color: rgba(0, 0, 0, 0.7);
 }
 
@@ -460,9 +462,9 @@ tr:hover td {
 
 /* Pulse Animation */
 @keyframes pulse-ring {
-  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(247, 147, 26, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(247, 147, 26, 0); }
-  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(247, 147, 26, 0); }
+  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(0, 107, 79, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 107, 79, 0); }
+  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(0, 107, 79, 0); }
 }
 .pulse-indicator {
     display: inline-block;

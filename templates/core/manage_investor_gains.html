@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion Gains Investisseurs - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h1 class="font-heading" style="font-size: 2rem;">Attribuer Gains Investisseurs</h1>
+        <p class="text-muted">Définissez le rendement mensuel pour chaque investisseur (30 - 50 USD).</p>
+    </div>
+    <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline" style="padding: 0.5rem; font-size: 0.875rem;">Retour Dashboard</a>
+</div>
+
+<!-- Attribution Form -->
+<div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+    <div class="card">
+        <h3 class="font-heading" style="margin-bottom: 1rem;">Nouveau Gain Mensuel</h3>
+        
+        {% if investor_contracts %}
+        <form method="POST" action="{% url 'core:manage_investor_gains' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Contrat Investisseur</label>
+                <select class="form-control" name="contrat_id" required>
+                    {% for contrat in investor_contracts %}
+                    <option value="{{ contrat.id }}">
+                        {{ contrat.partenaire.get_full_name }} - ${{ contrat.montant_engage|floatformat:0 }} 
+                        ({{ contrat.rendement_min|floatformat:0 }}-{{ contrat.rendement_max|floatformat:0 }} USD/mois)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Montant (USD)</label>
+                <input type="number" step="0.01" class="form-control" name="montant" 
+                       placeholder="30.00 - 50.00" min="30" max="50" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mois</label>
+                <input type="number" class="form-control" name="mois" min="1" max="12" required
+                       value="{{ current_month }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Année</label>
+                <input type="number" class="form-control" name="annee" min="2024" max="2030" required
+                       value="{{ current_year }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observation (optionnel)</label>
+                <textarea class="form-control" name="observation" rows="2" placeholder="Note sur ce gain..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Attribuer le gain</button>
+        </form>
+        {% else %}
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+            <p>Aucun contrat investisseur actif.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Gains -->
+    <div class="card">
+        <h3 class="font-heading" style="margin-bottom: 1rem;">Gains Récemment Attribués</h3>
+        
+        {% if recent_gains %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                    <th style="padding: 0.75rem;">Investisseur</th>
+                    <th style="padding: 0.75rem;">Période</th>
+                    <th style="padding: 0.75rem;">Montant</th>
+                    <th style="padding: 0.75rem;">Statut</th>
+                    <th style="padding: 0.75rem;">Attribué le</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gain in recent_gains %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;">{{ gain.contrat.partenaire.get_full_name }}</td>
+                    <td style="padding: 0.75rem; font-weight: bold;">{{ gain.mois }}/{{ gain.annee }}</td>
+                    <td style="padding: 0.75rem; color: var(--success, #22c55e); font-weight: bold;">${{ gain.montant|floatformat:2 }}</td>
+                    <td style="padding: 0.75rem;">
+                        {% if gain.statut == 'PAYE' %}
+                            <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Payé</span>
+                        {% else %}
+                            <span style="background: rgba(234,179,8,0.15); color: #eab308; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">En attente</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 0.75rem; font-size: 0.85rem;">{{ gain.date_attribution|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+            <p>Aucun gain attribué pour le moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

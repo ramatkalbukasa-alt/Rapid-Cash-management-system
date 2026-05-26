@@ -472,7 +472,7 @@ class AssocieDashboardView(LoginRequiredMixin, AssocieRequiredMixin, TemplateVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from .utils import get_partner_balance
-        from .models import ContratPartenaire, PaiementPartenaire
+        from .models import ContratPartenaire, PaiementPartenaire, RapportMensuelAssocie
         
         balance_info = get_partner_balance(self.request.user)
         context.update(balance_info)
@@ -490,6 +490,43 @@ class AssocieDashboardView(LoginRequiredMixin, AssocieRequiredMixin, TemplateVie
             })
         
         context['contracts'] = contracts_detail
+        
+        # === OPERATION CAPABILITIES (same as Agent) ===
+        try:
+            caisse = self.request.user.caisse
+            context['caisse'] = caisse
+            context['session_ouverte'] = SessionCaisse.objects.filter(
+                agent=self.request.user, 
+                statut=StatutSession.OUVERT
+            ).first()
+        except Caisse.DoesNotExist:
+            context['caisse'] = None
+            context['session_ouverte'] = None
+        
+        context['recent_transactions'] = Transaction.objects.filter(agent=self.request.user).order_by('-date')[:10]
+        context['devises'] = Devise.objects.all()
+        context['zones'] = ZoneTarif.objects.all()
+        
+        # === MONTHLY REPORTS ===
+        rapports = RapportMensuelAssocie.objects.filter(
+            contrat__partenaire=self.request.user
+        ).order_by('-annee', '-mois')[:12]
+        context['rapports_mensuels'] = rapports
+        
+        # Current month stats
+        now = timezone.now()
+        current_month_txs = Transaction.objects.filter(
+            agent=self.request.user,
+            statut=StatutTransaction.COMPLETED,
+            date__month=now.month,
+            date__year=now.year
+        )
+        context['ops_mois_count'] = current_month_txs.count()
+        context['ops_mois_volume'] = current_month_txs.aggregate(
+            total=Sum('montant_reference'))['total'] or Decimal('0.00')
+        context['ops_mois_frais'] = current_month_txs.aggregate(
+            total=Sum('frais_reference'))['total'] or Decimal('0.00')
+        
         return context
 
 class InvestisseurDashboardView(LoginRequiredMixin, InvestisseurRequiredMixin, TemplateView):
@@ -498,7 +535,7 @@ class InvestisseurDashboardView(LoginRequiredMixin, InvestisseurRequiredMixin, T
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from .utils import get_partner_balance
-        from .models import ContratPartenaire, PaiementPartenaire
+        from .models import ContratPartenaire, PaiementPartenaire, GainMensuelInvestisseur
         
         balance_info = get_partner_balance(self.request.user)
         context.update(balance_info)
@@ -516,6 +553,28 @@ class InvestisseurDashboardView(LoginRequiredMixin, InvestisseurRequiredMixin, T
             })
         
         context['contracts'] = contracts_detail
+        
+        # === MONTHLY GAINS HISTORY ===
+        gains = GainMensuelInvestisseur.objects.filter(
+            contrat__partenaire=self.request.user
+        ).order_by('-annee', '-mois')[:12]
+        context['gains_mensuels'] = gains
+        
+        # Total gains received
+        from django.db.models import Sum
+        total_gains = GainMensuelInvestisseur.objects.filter(
+            contrat__partenaire=self.request.user,
+            statut='PAYE'
+        ).aggregate(total=Sum('montant'))['total'] or Decimal('0.00')
+        context['total_gains_recus'] = total_gains
+        
+        # Pending gains
+        pending_gains = GainMensuelInvestisseur.objects.filter(
+            contrat__partenaire=self.request.user,
+            statut='EN_ATTENTE'
+        ).aggregate(total=Sum('montant'))['total'] or Decimal('0.00')
+        context['gains_en_attente'] = pending_gains
+        
         return context
 
 # HTMX View
@@ -541,34 +600,33 @@ def process_transaction(request):
         zone_id = request.POST.get('zone')
         type_op = request.POST.get('type') # Corrected from type_operation
         
+        def _get_redirect(user):
+            if user.role == Role.ADMIN:
+                return redirect('core:admin_dashboard')
+            elif user.role == Role.ASSOCIE:
+                return redirect('core:associe_dashboard')
+            return redirect('core:agent_dashboard')
+        
         try:
             montant = Decimal(montant_str)
         except (InvalidOperation, ValueError):
             messages.error(request, "Montant invalide.")
-            if request.user.role == Role.ADMIN:
-                return redirect('core:admin_dashboard')
-            return redirect('core:agent_dashboard')
+            return _get_redirect(request.user)
 
         if montant <= 0:
             messages.error(request, "Le montant doit être supérieur à zéro.")
-            if request.user.role == Role.ADMIN:
-                return redirect('core:admin_dashboard')
-            return redirect('core:agent_dashboard')
+            return _get_redirect(request.user)
             
         session = SessionCaisse.objects.filter(agent=request.user, statut=StatutSession.OUVERT).first()
         if not session:
             messages.error(request, "Vous devez ouvrir votre caisse avant de procéder à une transaction.")
-            if request.user.role == Role.ADMIN:
-                return redirect('core:admin_dashboard')
-            return redirect('core:agent_dashboard')
+            return _get_redirect(request.user)
         
         try:
             caisse = request.user.caisse
         except Caisse.DoesNotExist:
             messages.error(request, "Aucune caisse n'est associée à votre compte. Contactez l'administrateur.")
-            if request.user.role == Role.ADMIN:
-                return redirect('core:admin_dashboard')
-            return redirect('core:agent_dashboard')
+            return _get_redirect(request.user)
 
         devise = caisse.devise
         zone = get_object_or_404(ZoneTarif, id=zone_id)
@@ -581,9 +639,7 @@ def process_transaction(request):
 
         if type_op == TypeOperation.RETRAIT and caisse.solde < montant:
             messages.error(request, "Fonds insuffisants dans la caisse pour ce retrait.")
-            if request.user.role == Role.ADMIN:
-                return redirect('core:admin_dashboard')
-            return redirect('core:agent_dashboard')
+            return _get_redirect(request.user)
         
         numero = uuid.uuid4().hex[:8].upper()
         transaction = Transaction.objects.create(
@@ -622,18 +678,23 @@ def process_transaction(request):
         
         if request.user.role == Role.ADMIN:
             return redirect('core:admin_dashboard')
+        elif request.user.role == Role.ASSOCIE:
+            return redirect('core:associe_dashboard')
         return redirect('core:agent_dashboard')
 
-class OpenSessionView(LoginRequiredMixin, AgentRequiredMixin, View):
+class OpenSessionView(LoginRequiredMixin, View):
     def post(self, request):
+        if request.user.role not in [Role.AGENT, Role.ADMIN, Role.ASSOCIE]:
+            messages.error(request, "Accès non autorisé.")
+            return redirect('/')
         try:
             caisse = request.user.caisse
         except Exception:
             messages.error(request, "Aucune caisse associée à votre compte. Contactez l'administrateur.")
-            return redirect('core:agent_dashboard')
+            return self._redirect(request)
         if SessionCaisse.objects.filter(agent=request.user, statut=StatutSession.OUVERT).exists():
             messages.warning(request, "Une session est déjà ouverte.")
-            return redirect('core:agent_dashboard')
+            return self._redirect(request)
         SessionCaisse.objects.create(
             caisse=caisse,
             agent=request.user,
@@ -641,14 +702,25 @@ class OpenSessionView(LoginRequiredMixin, AgentRequiredMixin, View):
             solde_final_theorique=caisse.solde
         )
         messages.success(request, "Caisse ouverte avec succès. Bon service !")
+        return self._redirect(request)
+    
+    def _redirect(self, request):
         if request.user.role == Role.ADMIN:
             return redirect('core:admin_dashboard')
+        elif request.user.role == Role.ASSOCIE:
+            return redirect('core:associe_dashboard')
         return redirect('core:agent_dashboard')
 
-class CloseSessionView(LoginRequiredMixin, AgentRequiredMixin, FormView):
+class CloseSessionView(LoginRequiredMixin, FormView):
     template_name = 'core/close_session.html'
     form_class = CloseSessionForm
     success_url = reverse_lazy('core:agent_dashboard')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in [Role.AGENT, Role.ADMIN, Role.ASSOCIE]:
+            messages.error(request, "Accès non autorisé.")
+            return redirect('/')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -659,7 +731,7 @@ class CloseSessionView(LoginRequiredMixin, AgentRequiredMixin, FormView):
     def form_valid(self, form):
         session = SessionCaisse.objects.filter(agent=self.request.user, statut=StatutSession.OUVERT).first()
         if not session:
-            return redirect('core:agent_dashboard')
+            return redirect(self.get_success_url())
             
         cash_declare = form.cleaned_data['cash_declare']
         session.cash_declare = cash_declare
@@ -674,6 +746,8 @@ class CloseSessionView(LoginRequiredMixin, AgentRequiredMixin, FormView):
     def get_success_url(self):
         if self.request.user.role == Role.ADMIN:
             return reverse('core:admin_dashboard')
+        elif self.request.user.role == Role.ASSOCIE:
+            return reverse('core:associe_dashboard')
         return reverse('core:agent_dashboard')
 
 class ManageTauxView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
@@ -1209,4 +1283,111 @@ def export_transactions_excel(request):
     wb.save(response)
     
     return response
+
+
+# ===================== INVESTOR & ASSOCIATE MANAGEMENT =====================
+
+class ManageInvestorGainsView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to set monthly gains for investors"""
+    template_name = 'core/manage_investor_gains.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import ContratPartenaire, GainMensuelInvestisseur, TypeContrat
+        
+        # Active investor contracts
+        investor_contracts = ContratPartenaire.objects.filter(
+            type_contrat=TypeContrat.INVESTISSEUR,
+            statut='ACTIF'
+        ).select_related('partenaire', 'devise')
+        context['investor_contracts'] = investor_contracts
+        
+        # Recent gains
+        context['recent_gains'] = GainMensuelInvestisseur.objects.all().order_by('-annee', '-mois')[:20]
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        from .models import ContratPartenaire, GainMensuelInvestisseur
+        
+        contrat_id = request.POST.get('contrat_id')
+        montant = request.POST.get('montant')
+        mois = request.POST.get('mois')
+        annee = request.POST.get('annee')
+        observation = request.POST.get('observation', '')
+        
+        try:
+            contrat = ContratPartenaire.objects.get(id=contrat_id)
+            montant = Decimal(montant)
+            mois = int(mois)
+            annee = int(annee)
+            
+            # Validate amount is within range
+            if contrat.rendement_min and montant < contrat.rendement_min:
+                messages.error(request, f"Le montant doit être >= {contrat.rendement_min} USD (min contractuel)")
+                return redirect('core:manage_investor_gains')
+            if contrat.rendement_max and montant > contrat.rendement_max:
+                messages.error(request, f"Le montant doit être <= {contrat.rendement_max} USD (max contractuel)")
+                return redirect('core:manage_investor_gains')
+            
+            # Check if gain already exists
+            if GainMensuelInvestisseur.objects.filter(contrat=contrat, mois=mois, annee=annee).exists():
+                messages.error(request, f"Un gain existe déjà pour ce contrat en {mois}/{annee}")
+                return redirect('core:manage_investor_gains')
+            
+            GainMensuelInvestisseur.objects.create(
+                contrat=contrat,
+                mois=mois,
+                annee=annee,
+                montant=montant,
+                attribue_par=request.user,
+                observation=observation
+            )
+            
+            messages.success(request, f"Gain de {montant} USD attribué à {contrat.partenaire.get_full_name()} pour {mois}/{annee}")
+            
+        except ContratPartenaire.DoesNotExist:
+            messages.error(request, "Contrat introuvable.")
+        except (ValueError, TypeError) as e:
+            messages.error(request, f"Données invalides: {e}")
+        
+        return redirect('core:manage_investor_gains')
+
+
+class ManageAssociateReportsView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to see/manage associate monthly reports"""
+    template_name = 'core/manage_associate_reports.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import RapportMensuelAssocie
+        
+        context['rapports'] = RapportMensuelAssocie.objects.all().select_related(
+            'contrat', 'contrat__partenaire'
+        ).order_by('-annee', '-mois')[:50]
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        """Mark report as paid"""
+        from .models import RapportMensuelAssocie
+        
+        rapport_id = request.POST.get('rapport_id')
+        action = request.POST.get('action')
+        
+        try:
+            rapport = RapportMensuelAssocie.objects.get(id=rapport_id)
+            if action == 'valider':
+                rapport.statut = 'VALIDE'
+                rapport.save()
+                messages.success(request, f"Rapport {rapport.mois}/{rapport.annee} validé.")
+            elif action == 'payer':
+                rapport.statut = 'PAYE'
+                rapport.date_paiement = timezone.now()
+                rapport.save()
+                messages.success(request, f"Rapport {rapport.mois}/{rapport.annee} marqué comme payé.")
+        except RapportMensuelAssocie.DoesNotExist:
+            messages.error(request, "Rapport introuvable.")
+        
+        return redirect('core:manage_associate_reports')
 

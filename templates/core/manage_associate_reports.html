@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rapports Associés - RAPID CASH{% endblock %}
+
+{% block content %}
+<div class="pb-4" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h1 class="font-heading" style="font-size: 2rem;">Rapports Mensuels des Associés</h1>
+        <p class="text-muted">Visualisez et validez les rapports mensuels de partage de revenus.</p>
+    </div>
+    <a href="{% url 'core:admin_dashboard' %}" class="btn btn-outline" style="padding: 0.5rem; font-size: 0.875rem;">Retour Dashboard</a>
+</div>
+
+<div class="card">
+    {% if rapports %}
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                <th style="padding: 0.75rem;">Associé</th>
+                <th style="padding: 0.75rem;">Période</th>
+                <th style="padding: 0.75rem;">Opérations</th>
+                <th style="padding: 0.75rem;">Total Frais</th>
+                <th style="padding: 0.75rem;">Part RC</th>
+                <th style="padding: 0.75rem;">Part Associé</th>
+                <th style="padding: 0.75rem;">Statut</th>
+                <th style="padding: 0.75rem;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rapport in rapports %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem; font-weight: bold;">{{ rapport.contrat.partenaire.get_full_name }}</td>
+                <td style="padding: 0.75rem;">{{ rapport.mois }}/{{ rapport.annee }}</td>
+                <td style="padding: 0.75rem;">{{ rapport.nombre_operations }}</td>
+                <td style="padding: 0.75rem; font-weight: bold;">${{ rapport.total_frais_collectes|floatformat:2 }}</td>
+                <td style="padding: 0.75rem; color: var(--primary);">${{ rapport.montant_rc|floatformat:2 }} ({{ rapport.pourcentage_rc }}%)</td>
+                <td style="padding: 0.75rem; color: var(--success, #22c55e); font-weight: bold;">${{ rapport.montant_associe|floatformat:2 }}</td>
+                <td style="padding: 0.75rem;">
+                    {% if rapport.statut == 'PAYE' %}
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Payé</span>
+                    {% elif rapport.statut == 'VALIDE' %}
+                        <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Validé</span>
+                    {% else %}
+                        <span style="background: rgba(234,179,8,0.15); color: #eab308; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Généré</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 0.75rem;">
+                    {% if rapport.statut == 'GENERE' %}
+                    <form method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="rapport_id" value="{{ rapport.id }}">
+                        <input type="hidden" name="action" value="valider">
+                        <button type="submit" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">Valider</button>
+                    </form>
+                    {% elif rapport.statut == 'VALIDE' %}
+                    <form method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="rapport_id" value="{{ rapport.id }}">
+                        <input type="hidden" name="action" value="payer">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">Marquer Payé</button>
+                    </form>
+                    {% else %}
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+        <p>Aucun rapport mensuel généré. Exécutez la clôture mensuelle : <code>python manage.py cloture_mensuelle</code></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

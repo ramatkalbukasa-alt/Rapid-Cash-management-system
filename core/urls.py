@@ -49,6 +49,10 @@ urlpatterns = [
     path('export/transactions/csv/', views.ExportTransactionsCsvView.as_view(), name='export_csv'),
     path('export/transactions/excel/', views.export_transactions_excel, name='export_excel'),
 
+    # Investor & Associate Management (Admin)
+    path('manage-investor-gains/', views.ManageInvestorGainsView.as_view(), name='manage_investor_gains'),
+    path('manage-associate-reports/', views.ManageAssociateReportsView.as_view(), name='manage_associate_reports'),
+
     # REST API Endpoints
     path('api/transactions/', views.TransactionListCreateAPIView.as_view(), name='api_transactions'),
     path('api/transactions/<int:transaction_id>/', views.TransactionDetailAPIView.as_view(), name='api_transaction_detail'),

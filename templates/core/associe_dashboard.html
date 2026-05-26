@@ -1,128 +1,243 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Associé{% endblock %}
+{% block title %}Dashboard Associé - RAPID CASH{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-5">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>🤝 Dashboard Associé</h1>
-            <p class="text-muted">Bienvenue, {{ request.user.get_full_name }}</p>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="{% url 'core:user_profile' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-user"></i> Mon Profil
-            </a>
-            <a href="{% url 'core:partner_balance' %}" class="btn btn-primary">
-                <i class="fas fa-coins"></i> Mon Solde
-            </a>
-        </div>
+<div class="pb-4" style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+        <h1 class="font-heading" style="font-size: 2rem;">Espace Associé - Opérations & Revenus</h1>
+        <p class="text-muted" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+            Bienvenue, <strong>{{ request.user.get_full_name }}</strong> | 
+            Caisse : <strong class="font-mono text-gradient" style="font-size: 1.3rem;">{% if caisse %}{{ caisse.solde }} {{ caisse.devise.code }}{% else %}N/A{% endif %}</strong>
+        </p>
     </div>
-
-    <!-- Financial Summary -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-primary">
-                <div class="card-body">
-                    <h6 class="text-muted">Total Engagé</h6>
-                    <h3 class="text-primary fw-bold">${{ total_engaged|floatformat:2 }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-success">
-                <div class="card-body">
-                    <h6 class="text-muted">Montant Payé</h6>
-                    <h3 class="text-success fw-bold">${{ total_paid|floatformat:2 }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-danger">
-                <div class="card-body">
-                    <h6 class="text-muted">Solde Restant</h6>
-                    <h3 class="text-danger fw-bold">${{ balance|floatformat:2 }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-info">
-                <div class="card-body">
-                    <h6 class="text-muted">Nombre de Contrats</h6>
-                    <h3 class="text-info fw-bold">{{ contract_count }}</h3>
-                </div>
-            </div>
-        </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="{% url 'core:user_profile' %}" class="btn btn-outline" style="padding: 0.5rem; font-size: 0.875rem;">Mon Profil</a>
+        <a href="{% url 'core:partner_balance' %}" class="btn btn-primary" style="padding: 0.5rem; font-size: 0.875rem;">Mon Solde</a>
     </div>
+</div>
 
-    <!-- Contracts Table -->
-    {% if contracts %}
+<!-- Monthly Stats Summary -->
+<div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+    <div class="card stat-card">
+        <p class="text-muted" style="font-size: 0.8rem; margin: 0;">Capital Investi</p>
+        <h3 class="font-mono text-gradient" style="margin: 0.25rem 0;">${{ total_engaged|floatformat:2 }}</h3>
+    </div>
+    <div class="card stat-card">
+        <p class="text-muted" style="font-size: 0.8rem; margin: 0;">Opérations ce mois</p>
+        <h3 class="font-mono" style="margin: 0.25rem 0; color: var(--primary);">{{ ops_mois_count }}</h3>
+    </div>
+    <div class="card stat-card">
+        <p class="text-muted" style="font-size: 0.8rem; margin: 0;">Frais collectés (mois)</p>
+        <h3 class="font-mono" style="margin: 0.25rem 0; color: var(--success, #22c55e);">${{ ops_mois_frais|floatformat:2 }}</h3>
+    </div>
+    <div class="card stat-card">
+        <p class="text-muted" style="font-size: 0.8rem; margin: 0;">Contrats actifs</p>
+        <h3 class="font-mono" style="margin: 0.25rem 0; color: var(--info, #3b82f6);">{{ contract_count }}</h3>
+    </div>
+</div>
+
+<!-- Session Caisse -->
+{% if session_ouverte %}
+<div class="card stat-card mb-4">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 class="font-heading" style="color: var(--primary); margin: 0;">Session de Caisse Ouverte</h3>
+            <p style="color: var(--text); margin: 5px 0 0;">Solde initial: <span class="font-mono">{{ session_ouverte.solde_initial }} {{ caisse.devise.code }}</span> | <strong class="font-mono" style="font-size: 1.1em; color: var(--primary);">Solde actuel: {{ caisse.solde }} {{ caisse.devise.code }}</strong></p>
+        </div>
+        <a href="{% url 'core:close_session' %}" class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);">Clôturer ma Caisse</a>
+    </div>
+</div>
+{% else %}
+{% if caisse %}
+<div class="card mb-4" style="text-align: center; padding: 2rem; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
+    <h3 class="font-heading" style="color: var(--danger); margin-bottom: 1rem;">Votre caisse est fermée</h3>
+    <p class="text-muted" style="margin-bottom: 1rem;">Ouvrez une session pour commencer vos opérations.</p>
+    <form method="POST" action="{% url 'core:open_session' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" style="font-size: 1rem; padding: 0.75rem 2rem;">Ouvrir ma Caisse</button>
+    </form>
+</div>
+{% else %}
+<div class="card mb-4" style="text-align: center; padding: 2rem; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
+    <h3 class="font-heading" style="color: var(--danger); margin-bottom: 1rem;">Aucune caisse assignée</h3>
+    <p class="text-muted">Contactez l'administrateur pour obtenir votre caisse.</p>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Operations + Monthly Report Grid -->
+<div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+    <!-- Transaction Form -->
     <div class="card">
-        <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">📋 Mes Contrats</h5>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date Début</th>
-                        <th>Statut</th>
-                        <th>Montant Engagé</th>
-                        <th>Montant Payé</th>
-                        <th>Solde Restant</th>
-                        <th>Progression</th>
-                        <th>Dernier Paiement</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in contracts %}
-                    <tr>
-                        <td>{{ item.contract.date_debut|date:"d/m/Y" }}</td>
-                        <td>
-                            {% if item.contract.statut == 'ACTIF' %}
-                                <span class="badge bg-success">Actif</span>
-                            {% elif item.contract.statut == 'TERMINE' %}
-                                <span class="badge bg-secondary">Terminé</span>
-                            {% else %}
-                                <span class="badge bg-danger">Annulé</span>
-                            {% endif %}
-                        </td>
-                        <td class="fw-bold">${{ item.contract.montant_engage|floatformat:2 }}</td>
-                        <td class="text-success fw-bold">${{ item.contract.montant_paye|floatformat:2 }}</td>
-                        <td class="text-danger fw-bold">${{ item.remaining|floatformat:2 }}</td>
-                        <td>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-success" role="progressbar"
-                                     style="width: {{ item.pct_complete }}%;"
-                                     aria-valuenow="{{ item.pct_complete }}" aria-valuemin="0" aria-valuemax="100">
-                                    {{ item.pct_complete|floatformat:0 }}%
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            {% if item.last_payment %}
-                                <small>{{ item.last_payment.date|date:"d/m/Y" }}</small>
-                            {% else %}
-                                <small class="text-muted">-</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'core:contract_detail' contract_id=item.contract.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye"></i> Détails
-                            </a>
-                        </td>
-                    </tr>
+        <h3 class="font-heading">Nouvelle Transaction</h3>
+        
+        {% if session_ouverte %}
+        <form method="POST" action="{% url 'core:process_transaction' %}" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Type d'opération</label>
+                <select class="form-control" name="type" required>
+                    <option value="TRANSFERT">Transfert</option>
+                    <option value="RETRAIT">Retrait</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Montant</label>
+                <input type="number" step="0.01" class="form-control" name="montant" placeholder="Ex: 150.00" required
+                       hx-get="{% url 'core:calculate_fee' %}" hx-trigger="keyup changed delay:500ms" hx-target="#fee-display" hx-include="[name='zone']">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Zone</label>
+                <select class="form-control" name="zone" required 
+                        hx-get="{% url 'core:calculate_fee' %}" hx-trigger="change" hx-target="#fee-display" hx-include="[name='montant']">
+                    {% for z in zones %}
+                    <option value="{{ z.id }}">{{ z.nom }}</option>
                     {% endfor %}
-                </tbody>
-            </table>
+                </select>
+            </div>
+
+            <div class="card mt-4 mb-4" style="background-color: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px;">
+                <p class="text-muted" style="font-size: 0.875rem;">Frais calculés automatiquement</p>
+                <h2 id="fee-display" class="font-mono text-gradient" style="margin: 0;">0,00 $</h2>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Valider l'opération</button>
+        </form>
+        {% else %}
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.2); margin-top: 1rem; border-radius: 12px; border: 1px dashed var(--border);">
+            <p style="font-size: 1rem; color: var(--text);">Session Requise</p>
+            <p style="font-size: 0.875rem;">Ouvrez votre caisse pour effectuer des opérations.</p>
         </div>
+        {% endif %}
     </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Mes Opérations Récentes</h3>
+            <a href="{% url 'core:associe_dashboard' %}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Actualiser</a>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                    <th style="padding: 0.75rem;">N°</th>
+                    <th style="padding: 0.75rem;">Type</th>
+                    <th style="padding: 0.75rem;">Montant</th>
+                    <th style="padding: 0.75rem;">Frais</th>
+                    <th style="padding: 0.75rem;">Date</th>
+                    <th style="padding: 0.75rem;">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in recent_transactions %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;">{{ tx.numero_transaction }}</td>
+                    <td style="padding: 0.75rem;">{{ tx.get_type_operation_display }}</td>
+                    <td style="padding: 0.75rem;">{{ tx.montant }} {{ tx.devise_origine.code }}</td>
+                    <td style="padding: 0.75rem;">{{ tx.frais_calcules }} $</td>
+                    <td style="padding: 0.75rem;">{{ tx.date|date:"d/m/Y H:i" }}</td>
+                    <td style="padding: 0.75rem;">
+                        <span style="border: 1px solid var(--primary); color: var(--primary); padding: 4px 10px; font-size: 0.75rem; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; background: rgba(0, 107, 79, 0.1);">{{ tx.statut }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted" style="padding: 2rem;">Aucune transaction récente.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Monthly Reports Section -->
+<div class="card mt-4">
+    <h3 class="font-heading" style="margin-bottom: 1rem;">📊 Rapports Mensuels - Partage de Revenus</h3>
+    <p class="text-muted" style="margin-bottom: 1rem;">Chaque mois, les frais de commission de vos opérations sont calculés. Rapid Cash prélève sa part selon votre contrat.</p>
+    
+    {% if rapports_mensuels %}
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                <th style="padding: 0.75rem;">Période</th>
+                <th style="padding: 0.75rem;">Opérations</th>
+                <th style="padding: 0.75rem;">Volume</th>
+                <th style="padding: 0.75rem;">Total Frais</th>
+                <th style="padding: 0.75rem;">Part RC ({{ contracts.0.contract.pourcentage_partage_rc }}%)</th>
+                <th style="padding: 0.75rem;">Votre Part</th>
+                <th style="padding: 0.75rem;">Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rapport in rapports_mensuels %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem; font-weight: bold;">{{ rapport.mois }}/{{ rapport.annee }}</td>
+                <td style="padding: 0.75rem;">{{ rapport.nombre_operations }}</td>
+                <td style="padding: 0.75rem;">${{ rapport.volume_operations|floatformat:2 }}</td>
+                <td style="padding: 0.75rem; font-weight: bold;">${{ rapport.total_frais_collectes|floatformat:2 }}</td>
+                <td style="padding: 0.75rem; color: var(--danger, #ef4444);">-${{ rapport.montant_rc|floatformat:2 }}</td>
+                <td style="padding: 0.75rem; color: var(--success, #22c55e); font-weight: bold;">${{ rapport.montant_associe|floatformat:2 }}</td>
+                <td style="padding: 0.75rem;">
+                    {% if rapport.statut == 'PAYE' %}
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Payé</span>
+                    {% elif rapport.statut == 'VALIDE' %}
+                        <span style="background: rgba(59,130,246,0.15); color: #3b82f6; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Validé</span>
+                    {% else %}
+                        <span style="background: rgba(234,179,8,0.15); color: #eab308; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Généré</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% else %}
-    <div class="alert alert-info" role="alert">
-        <i class="fas fa-info-circle"></i> Vous n'avez pas de contrats actuellement.
+    <div style="padding: 2rem; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.1); border-radius: 8px;">
+        <p>Aucun rapport mensuel disponible. Les rapports seront générés automatiquement à la fin de chaque mois.</p>
     </div>
     {% endif %}
 </div>
+
+<!-- Contracts Section -->
+{% if contracts %}
+<div class="card mt-4">
+    <h3 class="font-heading" style="margin-bottom: 1rem;">📋 Mes Contrats</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                <th style="padding: 0.75rem;">Date Début</th>
+                <th style="padding: 0.75rem;">Capital</th>
+                <th style="padding: 0.75rem;">% Rapid Cash</th>
+                <th style="padding: 0.75rem;">Durée</th>
+                <th style="padding: 0.75rem;">Statut</th>
+                <th style="padding: 0.75rem;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in contracts %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.75rem;">{{ item.contract.date_debut|date:"d/m/Y" }}</td>
+                <td style="padding: 0.75rem; font-weight: bold;">${{ item.contract.montant_engage|floatformat:2 }}</td>
+                <td style="padding: 0.75rem;">{{ item.contract.pourcentage_partage_rc }}%</td>
+                <td style="padding: 0.75rem;">{% if item.contract.duree_mois %}{{ item.contract.duree_mois }} mois{% else %}Indéterminée{% endif %}</td>
+                <td style="padding: 0.75rem;">
+                    {% if item.contract.statut == 'ACTIF' %}
+                        <span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">Actif</span>
+                    {% else %}
+                        <span style="background: rgba(107,114,128,0.15); color: #6b7280; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px;">{{ item.contract.statut }}</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 0.75rem;">
+                    <a href="{% url 'core:contract_detail' contract_id=item.contract.id %}" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Détails</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 {% endblock %}

@@ -175,8 +175,8 @@ def create_transaction(agent, type_operation, montant, devise_origine, zone, obs
         ValueError: If validation fails
     """
     # Validation
-    if agent.role not in [Role.ADMIN, Role.AGENT]:
-        raise ValueError(f"User {agent.username} is not an agent or admin")
+    if agent.role not in [Role.ADMIN, Role.AGENT, Role.ASSOCIE]:
+        raise ValueError(f"User {agent.username} is not an agent, admin, or associate")
     
     if type_operation not in dict(TypeOperation.choices).keys():
         raise ValueError(f"Invalid operation type: {type_operation}")

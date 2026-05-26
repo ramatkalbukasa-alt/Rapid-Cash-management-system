@@ -70,9 +70,10 @@ class AgentProfile(models.Model):
 
 class Caisse(models.Model):
     agent = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='caisse', 
-                                 limit_choices_to={'role__in': [Role.AGENT, Role.ADMIN]}, verbose_name=_("Agent"))
+                                 limit_choices_to={'role__in': [Role.AGENT, Role.ADMIN, Role.ASSOCIE]}, verbose_name=_("Agent/Associé"))
     solde = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, verbose_name=_("Solde"))
     devise = models.ForeignKey(Devise, on_delete=models.RESTRICT, verbose_name=_("Devise de la caisse"))
+    is_partner_caisse = models.BooleanField(default=False, verbose_name=_("Caisse partenaire (Associé)"))
     history = HistoricalRecords()
 
     class Meta:
@@ -93,7 +94,7 @@ class StatutTransaction(models.TextChoices):
 class Transaction(models.Model):
     numero_transaction = models.CharField(max_length=100, unique=True, verbose_name=_("N° Transaction"))
     date = models.DateTimeField(auto_now_add=True, verbose_name=_("Date et Heure"))
-    agent = models.ForeignKey(CustomUser, on_delete=models.RESTRICT, related_name='transactions', limit_choices_to={'role__in': [Role.AGENT, Role.ADMIN]}, verbose_name=_("Agent"))
+    agent = models.ForeignKey(CustomUser, on_delete=models.RESTRICT, related_name='transactions', limit_choices_to={'role__in': [Role.AGENT, Role.ADMIN, Role.ASSOCIE]}, verbose_name=_("Agent/Associé"))
     type_operation = models.CharField(max_length=20, choices=TypeOperation.choices, verbose_name=_("Type d'opération"))
     montant = models.DecimalField(max_digits=15, decimal_places=2, verbose_name=_("Montant"))
     devise_origine = models.ForeignKey(Devise, on_delete=models.RESTRICT, related_name="trans_origine", verbose_name=_("Devise d'origine"))
@@ -157,16 +158,35 @@ class TypeContrat(models.TextChoices):
     INVESTISSEUR = 'INVESTISSEUR', _('Investisseur')
 
 class ContratPartenaire(models.Model):
+    CAPITAL_MIN_INVESTISSEUR = Decimal('500.00')
+    CAPITAL_MIN_ASSOCIE = Decimal('1000.00')
+    
     partenaire = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='contrats', 
                                    limit_choices_to={'role__in': [Role.ASSOCIE, Role.INVESTISSEUR]}, verbose_name=_("Partenaire"))
     type_contrat = models.CharField(max_length=20, choices=TypeContrat.choices, verbose_name=_("Type de contrat"))
     date_debut = models.DateField(verbose_name=_("Date de début"))
-    duree_mois = models.IntegerField(null=True, blank=True, verbose_name=_("Durée (mois)"), help_text="Surtout pour les investisseurs")
+    duree_mois = models.IntegerField(null=True, blank=True, verbose_name=_("Durée (mois)"), help_text="Durée du contrat")
     montant_engage = models.DecimalField(max_digits=15, decimal_places=2, verbose_name=_("Montant engagé / investi"))
     devise = models.ForeignKey(Devise, on_delete=models.RESTRICT, verbose_name=_("Devise"))
     retour_attendu = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Retour attendu (fixes ou %)"))
     montant_paye = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, verbose_name=_("Montant déjà payé"))
     statut = models.CharField(max_length=20, default="ACTIF", verbose_name=_("Statut"))
+    
+    # Partage de revenus (Associé) - modifiable
+    pourcentage_partage_rc = models.DecimalField(
+        max_digits=5, decimal_places=2, default=40.00, 
+        verbose_name=_("% prélevé par Rapid Cash"),
+        help_text="Pourcentage des bénéfices mensuels prélevé par Rapid Cash (par défaut 40%)")
+    
+    # Rendement mensuel (Investisseur)
+    rendement_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                         verbose_name=_("Rendement mensuel minimum (USD)"))
+    rendement_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                         verbose_name=_("Rendement mensuel maximum (USD)"))
+    
+    # Capital remboursement
+    capital_rembourse = models.BooleanField(default=False, verbose_name=_("Capital remboursé"))
+    date_remboursement = models.DateField(null=True, blank=True, verbose_name=_("Date de remboursement du capital"))
 
     class Meta:
         verbose_name = _("Contrat Partenaire")
@@ -188,13 +208,81 @@ class PaiementPartenaire(models.Model):
     def __str__(self):
         return f"Paiement {self.montant} le {self.date} pour {self.contrat.partenaire.username}"
 
+
+class RapportMensuelAssocie(models.Model):
+    """Monthly report for associates - tracks operations fees and RC share"""
+    contrat = models.ForeignKey(ContratPartenaire, on_delete=models.CASCADE, related_name='rapports_mensuels',
+                                verbose_name=_("Contrat"))
+    mois = models.IntegerField(verbose_name=_("Mois"))
+    annee = models.IntegerField(verbose_name=_("Année"))
+    
+    # Operations summary
+    nombre_operations = models.IntegerField(default=0, verbose_name=_("Nombre d'opérations"))
+    volume_operations = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,
+                                            verbose_name=_("Volume total des opérations (USD)"))
+    total_frais_collectes = models.DecimalField(max_digits=12, decimal_places=2, default=0.00,
+                                                verbose_name=_("Total frais/commissions collectés"))
+    
+    # Revenue sharing
+    pourcentage_rc = models.DecimalField(max_digits=5, decimal_places=2, verbose_name=_("% Rapid Cash appliqué"))
+    montant_rc = models.DecimalField(max_digits=12, decimal_places=2, default=0.00,
+                                     verbose_name=_("Part Rapid Cash (USD)"))
+    montant_associe = models.DecimalField(max_digits=12, decimal_places=2, default=0.00,
+                                          verbose_name=_("Part Associé (USD)"))
+    
+    # Status
+    statut = models.CharField(max_length=20, default='GENERE', 
+                              choices=[('GENERE', _('Généré')), ('VALIDE', _('Validé')), ('PAYE', _('Payé'))],
+                              verbose_name=_("Statut"))
+    date_generation = models.DateTimeField(auto_now_add=True, verbose_name=_("Date de génération"))
+    date_paiement = models.DateTimeField(null=True, blank=True, verbose_name=_("Date de paiement RC"))
+    observation = models.TextField(blank=True, verbose_name=_("Observation"))
+    
+    class Meta:
+        verbose_name = _("Rapport Mensuel Associé")
+        verbose_name_plural = _("Rapports Mensuels Associés")
+        unique_together = ('contrat', 'mois', 'annee')
+        ordering = ['-annee', '-mois']
+    
+    def __str__(self):
+        return f"Rapport {self.mois}/{self.annee} - {self.contrat.partenaire.username}"
+
+
+class GainMensuelInvestisseur(models.Model):
+    """Monthly gain for investors - set by admin"""
+    contrat = models.ForeignKey(ContratPartenaire, on_delete=models.CASCADE, related_name='gains_mensuels',
+                                verbose_name=_("Contrat"))
+    mois = models.IntegerField(verbose_name=_("Mois"))
+    annee = models.IntegerField(verbose_name=_("Année"))
+    
+    montant = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Montant du gain (USD)"))
+    
+    statut = models.CharField(max_length=20, default='EN_ATTENTE',
+                              choices=[('EN_ATTENTE', _('En attente')), ('PAYE', _('Payé'))],
+                              verbose_name=_("Statut"))
+    date_attribution = models.DateTimeField(auto_now_add=True, verbose_name=_("Date d'attribution"))
+    date_paiement = models.DateTimeField(null=True, blank=True, verbose_name=_("Date de paiement"))
+    attribue_par = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, 
+                                     related_name='gains_attribues', verbose_name=_("Attribué par"))
+    observation = models.TextField(blank=True, verbose_name=_("Observation"))
+    
+    class Meta:
+        verbose_name = _("Gain Mensuel Investisseur")
+        verbose_name_plural = _("Gains Mensuels Investisseurs")
+        unique_together = ('contrat', 'mois', 'annee')
+        ordering = ['-annee', '-mois']
+    
+    def __str__(self):
+        return f"Gain {self.montant} USD - {self.mois}/{self.annee} - {self.contrat.partenaire.username}"
+
+
 class StatutSession(models.TextChoices):
     OUVERT = 'OUVERT', _('Ouvert')
     FERME = 'FERMÉ', _('Fermé')
 
 class SessionCaisse(models.Model):
     caisse = models.ForeignKey(Caisse, on_delete=models.CASCADE, related_name='sessions', verbose_name=_("Caisse"))
-    agent = models.ForeignKey(CustomUser, on_delete=models.RESTRICT, related_name='sessions_caisse', limit_choices_to={'role__in': [Role.AGENT, Role.ADMIN]}, verbose_name=_("Agent"))
+    agent = models.ForeignKey(CustomUser, on_delete=models.RESTRICT, related_name='sessions_caisse', limit_choices_to={'role__in': [Role.AGENT, Role.ADMIN, Role.ASSOCIE]}, verbose_name=_("Agent/Associé"))
     date_ouverture = models.DateTimeField(auto_now_add=True, verbose_name=_("Heure d'ouverture"))
     date_fermeture = models.DateTimeField(null=True, blank=True, verbose_name=_("Heure de fermeture"))
     

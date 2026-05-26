@@ -18,6 +18,8 @@ from .models import (
     SystemSettings,
     TransactionAudit,
     APIToken,
+    RapportMensuelAssocie,
+    GainMensuelInvestisseur,
 )
 from simple_history.admin import SimpleHistoryAdmin
 
@@ -48,7 +50,8 @@ class AgentProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Caisse)
 class CaisseAdmin(admin.ModelAdmin):
-    list_display = ('agent', 'solde', 'devise')
+    list_display = ('agent', 'solde', 'devise', 'is_partner_caisse')
+    list_filter = ('is_partner_caisse',)
 
 @admin.register(SessionCaisse)
 class SessionCaisseAdmin(admin.ModelAdmin):
@@ -69,8 +72,41 @@ class DepenseAdmin(admin.ModelAdmin):
 
 @admin.register(ContratPartenaire)
 class ContratPartenaireAdmin(admin.ModelAdmin):
-    list_display = ('partenaire', 'type_contrat', 'montant_engage', 'devise', 'montant_paye', 'statut')
-    list_filter = ('type_contrat', 'statut')
+    list_display = ('partenaire', 'type_contrat', 'montant_engage', 'devise', 'pourcentage_partage_rc', 'rendement_min', 'rendement_max', 'capital_rembourse', 'statut')
+    list_filter = ('type_contrat', 'statut', 'capital_rembourse')
+    
+    fieldsets = (
+        ('Informations générales', {
+            'fields': ('partenaire', 'type_contrat', 'date_debut', 'duree_mois', 'montant_engage', 'devise', 'statut')
+        }),
+        ('Investisseur - Rendement mensuel', {
+            'fields': ('rendement_min', 'rendement_max'),
+            'classes': ('collapse',),
+            'description': 'Capital min: 500 USD. Rendement: 30-50 USD/mois'
+        }),
+        ('Associé - Partage de revenus', {
+            'fields': ('pourcentage_partage_rc',),
+            'classes': ('collapse',),
+            'description': 'Capital min: 1000 USD. Rapid Cash prélève ce % des bénéfices mensuels'
+        }),
+        ('Remboursement du capital', {
+            'fields': ('capital_rembourse', 'date_remboursement'),
+            'classes': ('collapse',),
+        }),
+        ('Ancien système (paiements)', {
+            'fields': ('retour_attendu', 'montant_paye'),
+            'classes': ('collapse',),
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        from django.contrib import messages as admin_messages
+        # Capital minimum validation
+        if obj.type_contrat == 'INVESTISSEUR' and obj.montant_engage < ContratPartenaire.CAPITAL_MIN_INVESTISSEUR:
+            admin_messages.warning(request, f"Attention: capital investisseur en dessous du minimum ({ContratPartenaire.CAPITAL_MIN_INVESTISSEUR} USD)")
+        elif obj.type_contrat == 'ASSOCIE' and obj.montant_engage < ContratPartenaire.CAPITAL_MIN_ASSOCIE:
+            admin_messages.warning(request, f"Attention: capital associé en dessous du minimum ({ContratPartenaire.CAPITAL_MIN_ASSOCIE} USD)")
+        super().save_model(request, obj, form, change)
 
 @admin.register(PaiementPartenaire)
 class PaiementPartenaireAdmin(admin.ModelAdmin):
@@ -120,3 +156,19 @@ class APITokenAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'created_at')
     search_fields = ('user__username', 'token')
     readonly_fields = ('token', 'created_at', 'last_used')
+
+
+@admin.register(RapportMensuelAssocie)
+class RapportMensuelAssocieAdmin(admin.ModelAdmin):
+    list_display = ('contrat', 'mois', 'annee', 'nombre_operations', 'total_frais_collectes', 'montant_rc', 'montant_associe', 'statut')
+    list_filter = ('statut', 'annee', 'mois')
+    search_fields = ('contrat__partenaire__username', 'contrat__partenaire__first_name')
+    readonly_fields = ('date_generation',)
+
+
+@admin.register(GainMensuelInvestisseur)
+class GainMensuelInvestisseurAdmin(admin.ModelAdmin):
+    list_display = ('contrat', 'mois', 'annee', 'montant', 'statut', 'date_attribution', 'attribue_par')
+    list_filter = ('statut', 'annee', 'mois')
+    search_fields = ('contrat__partenaire__username', 'contrat__partenaire__first_name')
+    readonly_fields = ('date_attribution',)
