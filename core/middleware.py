@@ -1,5 +1,5 @@
 import logging
-from core.models import AgentActivityLog
+from core.models import AgentActivityLog, Role
 from decimal import Decimal
 
 logger = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ class ActivityLoggingMiddleware:
             elif 'delete' in path and method == 'POST':
                 action = 'TRANSACTION_CANCEL'
             
-            # Only log if action was identified
-            if action:
+            # Only log if action was identified and user is an AGENT
+            if action and getattr(user, 'role', None) == Role.AGENT:
                 AgentActivityLog.objects.create(
                     agent=user,
                     action=action,

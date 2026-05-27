@@ -20,6 +20,7 @@ from .models import (
 )
 from decimal import Decimal, InvalidOperation
 import uuid
+import secrets
 import logging
 
 logger = logging.getLogger(__name__)
@@ -210,19 +211,17 @@ class SystemSettingsAPIView(BaseApiView):
         settings = SystemSettings.get_settings()
         return JsonResponse({
             'company_name': settings.company_name,
-            'phone_number': settings.phone_number,
-            'email_address': settings.email_address,
-            'physical_address': settings.physical_address,
+            'company_phone': settings.company_phone,
+            'company_email': settings.company_email,
+            'company_address': settings.company_address,
             'default_commission_percentage': str(settings.default_commission_percentage),
             'transaction_number_prefix': settings.transaction_number_prefix,
             'enable_email_notifications': settings.enable_email_notifications,
             'enable_sms_notifications': settings.enable_sms_notifications,
             'enable_api': settings.enable_api,
             'is_maintenance_mode': settings.is_maintenance_mode,
-            'enable_two_factor_auth': settings.enable_two_factor_auth,
-            'auto_reconcile_enabled': settings.auto_reconcile_enabled,
             'auto_reconcile_threshold': str(settings.auto_reconcile_threshold),
-            'audit_log_retention_days': settings.audit_log_retention_days,
+            'audit_retention_days': settings.audit_retention_days,
         })
 
 
@@ -293,10 +292,10 @@ class UserDeactivateView(LoginRequiredMixin, AdminRequiredMixin, View):
 class UserPasswordResetView(LoginRequiredMixin, AdminRequiredMixin, View):
     def post(self, request, pk):
         user = get_object_or_404(CustomUser, pk=pk)
-        new_password = "Password123!"
+        new_password = secrets.token_urlsafe(12)
         user.set_password(new_password)
         user.save()
-        messages.success(request, f"Mot de passe de {user.username} réinitialisé avec succès.")
+        messages.success(request, f"Mot de passe de {user.username} réinitialisé. Nouveau mot de passe temporaire : {new_password}")
         return redirect('core:manage_users')
 
 class AdminDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
