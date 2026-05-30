@@ -167,8 +167,18 @@
             </div>
 
             <div class="card mt-4 mb-4" style="background-color: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px;">
-                <p class="text-muted" style="font-size: 0.875rem;">Frais calculés automatiquement</p>
-                <h2 id="fee-display-admin" class="font-mono text-gradient" style="margin: 0;">0,00 $</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <p class="text-muted" style="font-size: 0.875rem; margin: 0;">Frais calculés automatiquement</p>
+                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">
+                        <input type="checkbox" id="frais-reduction-toggle-admin" onchange="toggleFraisManuelAdmin()">
+                        Réduction
+                    </label>
+                </div>
+                <h2 id="fee-display-admin" class="font-mono text-gradient" style="margin: 0 0 0;">0,00 $</h2>
+                <div id="frais-manuel-container-admin" style="display: none; margin-top: 0.75rem;">
+                    <label style="font-size: 0.8rem; color: #f59e0b; margin-bottom: 0.25rem; display: block;">Frais après réduction ($)</label>
+                    <input type="number" step="0.01" min="0" id="frais-manuel-input-admin" name="frais_manuel" class="form-control" placeholder="0.00" disabled>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary btn-block">Valider l'opération</button>
@@ -256,5 +266,38 @@
             }
         });
     });
+</script>
+
+<script>
+function toggleFraisManuelAdmin() {
+    var toggle = document.getElementById('frais-reduction-toggle-admin');
+    var container = document.getElementById('frais-manuel-container-admin');
+    var input = document.getElementById('frais-manuel-input-admin');
+    if (toggle.checked) {
+        container.style.display = 'block';
+        input.disabled = false;
+        var feeEl = document.getElementById('fee-display-admin');
+        if (feeEl) {
+            var feeText = (feeEl.innerText || feeEl.textContent).replace('$', '').replace(',', '.').trim();
+            var val = parseFloat(feeText);
+            if (!isNaN(val)) input.value = val.toFixed(2);
+        }
+    } else {
+        container.style.display = 'none';
+        input.disabled = true;
+        input.value = '';
+    }
+}
+
+document.addEventListener('htmx:afterSwap', function() {
+    var toggle = document.getElementById('frais-reduction-toggle-admin');
+    var input = document.getElementById('frais-manuel-input-admin');
+    if (!toggle || !toggle.checked || !input) return;
+    var feeEl = document.getElementById('fee-display-admin');
+    if (!feeEl) return;
+    var feeText = (feeEl.innerText || feeEl.textContent).replace('$', '').replace(',', '.').trim();
+    var autoFee = parseFloat(feeText) || 0;
+    input.max = autoFee;
+});
 </script>
 {% endblock %}

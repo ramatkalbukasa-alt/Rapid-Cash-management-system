@@ -84,8 +84,18 @@
             </div>
 
             <div class="card mt-4 mb-4" style="background-color: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px;">
-                <p class="text-muted" style="font-size: 0.875rem;">Frais calculés automatiquement</p>
-                <h2 id="fee-display" class="font-mono text-gradient" style="margin: 0;">0,00 $</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <p class="text-muted" style="font-size: 0.875rem; margin: 0;">Frais calculés automatiquement</p>
+                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.8rem; color: var(--text-muted);">
+                        <input type="checkbox" id="frais-reduction-toggle" onchange="toggleFraisManuel()">
+                        Réduction
+                    </label>
+                </div>
+                <h2 id="fee-display" class="font-mono text-gradient" style="margin: 0 0 0;">0,00 $</h2>
+                <div id="frais-manuel-container" style="display: none; margin-top: 0.75rem;">
+                    <label style="font-size: 0.8rem; color: #f59e0b; margin-bottom: 0.25rem; display: block;">Frais après réduction ($)</label>
+                    <input type="number" step="0.01" min="0" id="frais-manuel-input" name="frais_manuel" class="form-control" placeholder="0.00" disabled>
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary btn-block">Valider l'opération</button>
@@ -140,3 +150,36 @@
     </div>
 </div>
 {% endblock %}
+
+<script>
+function toggleFraisManuel() {
+    var toggle = document.getElementById('frais-reduction-toggle');
+    var container = document.getElementById('frais-manuel-container');
+    var input = document.getElementById('frais-manuel-input');
+    if (toggle.checked) {
+        container.style.display = 'block';
+        input.disabled = false;
+        var feeEl = document.getElementById('fee-display');
+        if (feeEl) {
+            var feeText = (feeEl.innerText || feeEl.textContent).replace('$', '').replace(',', '.').trim();
+            var val = parseFloat(feeText);
+            if (!isNaN(val)) input.value = val.toFixed(2);
+        }
+    } else {
+        container.style.display = 'none';
+        input.disabled = true;
+        input.value = '';
+    }
+}
+
+document.addEventListener('htmx:afterSwap', function() {
+    var toggle = document.getElementById('frais-reduction-toggle');
+    var input = document.getElementById('frais-manuel-input');
+    if (!toggle || !toggle.checked || !input) return;
+    var feeEl = document.getElementById('fee-display');
+    if (!feeEl) return;
+    var feeText = (feeEl.innerText || feeEl.textContent).replace('$', '').replace(',', '.').trim();
+    var autoFee = parseFloat(feeText) || 0;
+    input.max = autoFee;
+});
+</script>

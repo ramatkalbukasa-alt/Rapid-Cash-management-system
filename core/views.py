@@ -631,10 +631,32 @@ def process_transaction(request):
         zone = get_object_or_404(ZoneTarif, id=zone_id)
 
         tarif = Tarif.objects.filter(zone_id=zone_id, montant_min__lte=montant, montant_max__gte=montant).first()
-        frais = tarif.frais_fixe if tarif else Decimal('0.00')
-        
+        frais_auto = tarif.frais_fixe if tarif else Decimal('0.00')
+
+        # Manual fee override (reduction only)
+        frais_final = frais_auto
+        frais_manuel_str = request.POST.get('frais_manuel', '').strip()
+        if frais_manuel_str:
+            try:
+                frais_manuel = Decimal(frais_manuel_str)
+                if frais_manuel < 0:
+                    messages.error(request, "Les frais manuels ne peuvent pas être négatifs.")
+                    return _get_redirect(request.user)
+                if frais_manuel > frais_auto:
+                    messages.error(request, f"Les frais saisis ({frais_manuel} $) dépassent les frais calculés ({frais_auto} $). Seule une réduction est autorisée.")
+                    return _get_redirect(request.user)
+                frais_final = frais_manuel
+            except (InvalidOperation, ValueError):
+                messages.error(request, "Valeur de frais manuels invalide.")
+                return _get_redirect(request.user)
+
         montant_usd = montant * devise.taux_reference_usd
-        frais_usd = frais * devise.taux_reference_usd
+        frais_usd = frais_final * devise.taux_reference_usd
+
+        # Build observation with reduction note if applicable
+        observation = f"Vers {zone.nom}"
+        if frais_final != frais_auto:
+            observation += f" | Frais réduits: auto={frais_auto} $, appliqué={frais_final} $"
 
         if type_op == TypeOperation.RETRAIT and caisse.solde < montant:
             messages.error(request, "Fonds insuffisants dans la caisse pour ce retrait.")
@@ -648,10 +670,10 @@ def process_transaction(request):
             montant=montant,
             devise_origine=caisse.devise,
             taux_conversion=1.0000,
-            frais_calcules=frais,
+            frais_calcules=frais_final,
             montant_reference=montant_usd,
             frais_reference=frais_usd,
-            observation=f"Vers {zone.nom}"
+            observation=observation
         )
         
         # Update caisse
@@ -665,7 +687,7 @@ def process_transaction(request):
         session.solde_final_theorique = caisse.solde
         session.save()
 
-        messages.success(request, f"Transaction {type_op} de {montant} {caisse.devise.code} réussie. Frais: {frais}.")
+        messages.success(request, f"Transaction {type_op} de {montant} {caisse.devise.code} réussie. Frais: {frais_final}.")
         
         # Notify admins
         admins = CustomUser.objects.filter(role=Role.ADMIN)
