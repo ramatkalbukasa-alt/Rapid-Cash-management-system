@@ -252,6 +252,7 @@
 {% endif %}
 {% endblock %}
 
+{% block extra_js %}
 <script>
 function toggleFraisManuel() {
     var toggle = document.getElementById('frais-reduction-toggle');
@@ -284,3 +285,4 @@ document.addEventListener('htmx:afterSwap', function() {
     input.max = autoFee;
 });
 </script>
+{% endblock %}
